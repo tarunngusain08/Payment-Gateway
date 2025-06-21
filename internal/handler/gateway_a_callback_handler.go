@@ -8,20 +8,24 @@ import (
 )
 
 type GatewayACallbackHandler struct {
-	Service service.GatewayACallbackService
+	Service service.Callback
 }
 
-func NewGatewayACallback(service service.GatewayACallbackService) GatewayACallbackHandler {
+func NewGatewayACallback(service service.Callback) GatewayACallbackHandler {
 	return GatewayACallbackHandler{Service: service}
 }
 
 func (h *GatewayACallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var req dtos.GatewayACallbackRequest
+	var req dtos.HandleCallbackRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
-	resp, status := h.Service.HandleCallback(req)
-	w.WriteHeader(status)
+	resp, err := h.Service.HandleCallback(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resp)
 }

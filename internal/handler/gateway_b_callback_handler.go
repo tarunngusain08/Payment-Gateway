@@ -9,11 +9,11 @@ import (
 )
 
 type GatewayBCallbackHandler struct {
-	Service service.GatewayBCallbackService
+	Service service.Callback
 }
 
-func NewGatewayBCallback(service service.GatewayBCallbackService) GatewayACallbackHandler {
-	return GatewayACallbackHandler{Service: service}
+func NewGatewayBCallback(service service.Callback) GatewayBCallbackHandler {
+	return GatewayBCallbackHandler{Service: service}
 }
 
 func (h *GatewayBCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -22,12 +22,16 @@ func (h *GatewayBCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "invalid XML", http.StatusBadRequest)
 		return
 	}
-	var req dtos.GatewayBCallbackRequest
+	var req dtos.HandleCallbackRequest
 	if err := xml.Unmarshal(body, &req); err != nil {
 		http.Error(w, "invalid XML", http.StatusBadRequest)
 		return
 	}
-	resp, status := h.Service.HandleCallback(req)
-	w.WriteHeader(status)
+	resp, err := h.Service.HandleCallback(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 	xml.NewEncoder(w).Encode(resp)
 }

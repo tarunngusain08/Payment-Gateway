@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"Payment-Gateway/internal/dtos"
 	"bytes"
 	"context"
 	"encoding/xml"
@@ -111,8 +112,9 @@ func (g *GatewayB) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 	return envelope, nil
 }
 
-// HandleCallback returns a SOAP-like XML callback response for GatewayB.
-func (g *GatewayB) HandleCallback(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/xml")
-	w.Write([]byte(`<CallbackResponse><Gateway>B</Gateway><Callback>received</Callback></CallbackResponse>`))
+// HandleCallback processes the callback for GatewayB.
+func (g *GatewayB) HandleCallback(req dtos.HandleCallbackRequest) error {
+	// Implement your callback logic here, e.g., update transaction status, etc.
+	// For now, just simulate success.
+	return nil
 }

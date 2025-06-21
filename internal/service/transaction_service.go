@@ -4,24 +4,22 @@ import (
 	"Payment-Gateway/internal/constants"
 	"Payment-Gateway/internal/gateway"
 	"Payment-Gateway/internal/models"
-	"sync"
+	"Payment-Gateway/internal/repository"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type TransactionService struct {
-	store map[string]*models.Transaction
-	mu    sync.Mutex
+	repository repository.TransactionRepository
 }
 
-func NewTransactionService() *TransactionService {
+func NewTransactionService(repo repository.TransactionRepository) *TransactionService {
 	return &TransactionService{
-		store: make(map[string]*models.Transaction),
+		repository: repo,
 	}
 }
 
-// CreateAndProcessDeposit creates a PENDING transaction, forwards to gateway, updates status.
 func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest, gw gateway.PaymentGateway) (*models.Transaction, error) {
 	tx := &models.Transaction{
 		ID:        uuid.NewString(),
@@ -31,25 +29,23 @@ func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest,
 		Timestamp: time.Now(),
 		Account:   req.Account,
 	}
-	s.mu.Lock()
-	s.store[tx.ID] = tx
-	s.mu.Unlock()
+
+	if err := s.repository.CreateTransaction(tx); err != nil {
+		return nil, err
+	}
 
 	// Forward to gateway
-	// Simulate request (in real code, build http.Request)
 	resp, err := gw.ProcessDeposit(nil)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	if err != nil {
-		tx.Status = constants.StatusFailed
+		s.repository.UpdateTransactionStatus(tx.ID, constants.StatusFailed)
 		return tx, err
 	}
-	tx.Status = constants.StatusSuccess
+
+	s.repository.UpdateTransactionStatus(tx.ID, constants.StatusSuccess)
 	_ = resp // In real code, process resp
 	return tx, nil
 }
 
-// CreateAndProcessWithdrawal creates a PENDING transaction, forwards to gateway, updates status.
 func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRequest, gw gateway.PaymentGateway) (*models.Transaction, error) {
 	tx := &models.Transaction{
 		ID:        uuid.NewString(),
@@ -59,27 +55,25 @@ func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRe
 		Timestamp: time.Now(),
 		Account:   req.Account,
 	}
-	s.mu.Lock()
-	s.store[tx.ID] = tx
-	s.mu.Unlock()
 
-	// Forward to gateway
+	if err := s.repository.CreateTransaction(tx); err != nil {
+		return nil, err
+	}
+
 	resp, err := gw.ProcessWithdrawal(nil)
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	if err != nil {
-		tx.Status = constants.StatusFailed
+		s.repository.UpdateTransactionStatus(tx.ID, constants.StatusFailed)
 		return tx, err
 	}
-	tx.Status = constants.StatusSuccess
+
+	err = s.repository.UpdateTransactionStatus(tx.ID, constants.StatusSuccess)
+	if err != nil {
+		return tx, err
+	}
 	_ = resp
 	return tx, nil
 }
 
-// GetTransaction returns a transaction by ID.
 func (s *TransactionService) GetTransaction(id string) (*models.Transaction, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	tx, ok := s.store[id]
-	return tx, ok
+	return s.repository.GetTransactionByID(id)
 }

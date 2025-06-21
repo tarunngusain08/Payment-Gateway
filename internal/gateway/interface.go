@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"Payment-Gateway/internal/dtos"
 	"net/http"
 )
 
@@ -8,5 +9,5 @@ import (
 type PaymentGateway interface {
 	ProcessDeposit(r *http.Request) (interface{}, error)
 	ProcessWithdrawal(r *http.Request) (interface{}, error)
-	HandleCallback(w http.ResponseWriter, r *http.Request)
+	HandleCallback(req dtos.HandleCallbackRequest) error
 }

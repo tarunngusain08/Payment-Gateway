@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"Payment-Gateway/internal/dtos"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -104,8 +105,9 @@ func (g *GatewayA) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 	return result, nil
 }
 
-// HandleCallback returns a JSON callback response for GatewayA.
-func (g *GatewayA) HandleCallback(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"gateway":"A","callback":"received"}`))
+// HandleCallback processes the callback for GatewayA.
+func (g *GatewayA) HandleCallback(req dtos.HandleCallbackRequest) error {
+	// Implement your callback logic here, e.g., update transaction status, etc.
+	// For now, just simulate success.
+	return nil
 }
