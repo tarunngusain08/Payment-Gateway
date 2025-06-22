@@ -12,13 +12,13 @@ import (
 )
 
 // GatewayA is a skeleton for a JSON-based gateway.
-type GatewayA struct{}
-
-func NewGatewayA() PaymentGateway {
-	return &GatewayA{}
+type GatewayA struct {
+	URL string
 }
 
-const gatewayAURL = "http://mock-gateway-a/deposit" // Simulated endpoint
+func NewGatewayA(url string) PaymentGateway {
+	return &GatewayA{URL: url}
+}
 
 // ProcessDeposit simulates HTTP JSON request/response for GatewayA, handling success, failure, and timeout.
 func (g *GatewayA) ProcessDeposit(r *http.Request) (interface{}, error) {
@@ -35,7 +35,7 @@ func (g *GatewayA) ProcessDeposit(r *http.Request) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", gatewayAURL, bytes.NewBuffer(payload))
+	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/deposit", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -74,7 +74,7 @@ func (g *GatewayA) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", gatewayAURL, bytes.NewBuffer(payload))
+	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/withdrawal", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

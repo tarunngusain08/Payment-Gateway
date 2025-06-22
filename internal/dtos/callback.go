@@ -3,18 +3,18 @@ package dtos
 import errors "Payment-Gateway/pkg/error"
 
 type HandleCallbackRequest struct {
-	TransactionID string                 `json:"transaction_id"`
-	Status        string                 `json:"status"`
-	Metadata      map[string]interface{} `json:"metadata"`
-	GatewayRef    string                 `json:"gateway_ref"`
-	Amount        float64                `json:"amount"`
-	Currency      string                 `json:"currency"`
-	Timestamp     string                 `json:"timestamp"`
+	TransactionID string                 `json:"transaction_id" xml:"TransactionID"`
+	Status        string                 `json:"status" xml:"Status"`
+	Metadata      map[string]interface{} `json:"metadata" xml:"-"`
+	GatewayRef    string                 `json:"gateway_ref" xml:"GatewayRef"`
+	Amount        float64                `json:"amount" xml:"Amount"`
+	Currency      string                 `json:"currency" xml:"Currency"`
+	Timestamp     string                 `json:"timestamp" xml:"Timestamp"`
 }
 
 type HandleCallbackResponse struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
+	Status  string `json:"status" xml:"Status"`
+	Message string `json:"message" xml:"Message"`
 }
 
 func (r *HandleCallbackRequest) Validate() error {

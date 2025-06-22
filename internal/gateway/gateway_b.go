@@ -13,13 +13,13 @@ import (
 )
 
 // GatewayB is a skeleton for a SOAP-based gateway.
-type GatewayB struct{}
-
-func NewGatewayB() PaymentGateway {
-	return &GatewayB{}
+type GatewayB struct {
+	URL string
 }
 
-const gatewayBURL = "http://mock-gateway-b/soap" // Simulated endpoint
+func NewGatewayB(url string) PaymentGateway {
+	return &GatewayB{URL: url}
+}
 
 // ProcessDeposit simulates a SOAP request/response for GatewayB.
 func (g *GatewayB) ProcessDeposit(r *http.Request) (interface{}, error) {
@@ -32,7 +32,7 @@ func (g *GatewayB) ProcessDeposit(r *http.Request) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", gatewayBURL, bytes.NewBuffer(payload))
+	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/deposit", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/xml")
 
 	client := &http.Client{}
@@ -68,7 +68,7 @@ func (g *GatewayB) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", gatewayBURL, bytes.NewBuffer(payload))
+	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/withdrawal", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/xml")
 
 	client := &http.Client{}

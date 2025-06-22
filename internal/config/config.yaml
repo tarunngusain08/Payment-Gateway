@@ -1,0 +1,20 @@
+gateways:
+  gatewayA:
+    url: "http://localhost:8080/mock-gateway-a"
+    enabled: true
+  gatewayB:
+    url: "http://localhost:8080/mock-gateway-b"
+    enabled: true
+
+middlewares:
+  - context
+  - auth
+  - timeout
+  - latencyTracker
+  - logging
+  - recovery
+
+static:
+  apiVersion: "v1"
+  serviceName: "Payment-Gateway"
+  defaultTimeoutSeconds: 10

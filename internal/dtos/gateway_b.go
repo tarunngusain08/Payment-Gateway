@@ -11,8 +11,10 @@ type SOAPEnvelope struct {
 }
 
 type SOAPBody struct {
-	DepositRequest    *SOAPDepositRequest    `xml:"DepositRequest,omitempty"`
-	WithdrawalRequest *SOAPWithdrawalRequest `xml:"WithdrawalRequest,omitempty"`
+	DepositRequest     *SOAPDepositRequest     `xml:"DepositRequest,omitempty"`
+	WithdrawalRequest  *SOAPWithdrawalRequest  `xml:"WithdrawalRequest,omitempty"`
+	DepositResponse    *SOAPDepositResponse    `xml:"DepositResponse,omitempty"`
+	WithdrawalResponse *SOAPWithdrawalResponse `xml:"WithdrawalResponse,omitempty"`
 }
 
 type SOAPDepositRequest struct {
@@ -45,4 +47,14 @@ func (r *SOAPWithdrawalRequest) Validate() error {
 		return errors.ErrAmountMustBePositive
 	}
 	return nil
+}
+
+type SOAPDepositResponse struct {
+	XMLName xml.Name `xml:"DepositResponse"`
+	Result  string   `xml:"Result"`
+}
+
+type SOAPWithdrawalResponse struct {
+	XMLName xml.Name `xml:"WithdrawalResponse"`
+	Result  string   `xml:"Result"`
 }

@@ -13,7 +13,7 @@ type GatewayPoolImpl struct {
 	rrIndex  int
 }
 
-func NewGatewayPool(gateways []gateway.PaymentGateway) *GatewayPoolImpl {
+func NewGatewayPool(gateways []gateway.PaymentGateway) GatewayPool {
 	return &GatewayPoolImpl{gateways: gateways}
 }
 

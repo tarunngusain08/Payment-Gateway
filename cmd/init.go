@@ -12,6 +12,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Registry for gateway constructors
+var gatewayRegistry = map[string]func(url string) gateway.PaymentGateway{
+	"gatewayA": gateway.NewGatewayA,
+	"gatewayB": gateway.NewGatewayB,
+	// Add more gateway constructors here as needed
+}
+
 func initializeMiddlewares(router *mux.Router) {
 	router.Use(middleware.ContextMiddleware)
 	router.Use(middleware.AuthMiddleware)
@@ -22,17 +29,22 @@ func initializeMiddlewares(router *mux.Router) {
 }
 
 func initializeHandlers() (*handler.Handlers, error) {
+	cfg := GetConfig()
+
+	var gateways []gateway.PaymentGateway
+	for name, gwCfg := range cfg.Gateways {
+		if gwCfg.Enabled {
+			if constructor, ok := gatewayRegistry[name]; ok {
+				gateways = append(gateways, constructor(gwCfg.URL))
+			}
+		}
+	}
+
 	transactionRepo := repository.NewInMemoryTransactionRepository()
-	gatewayPool := service.NewGatewayPool(
-		[]gateway.PaymentGateway{
-			gateway.NewGatewayA(),
-			gateway.NewGatewayB(),
-		},
-	)
+	gatewayPool := service.NewGatewayPool(gateways)
 	transactionService := service.NewTransactionService(transactionRepo, gatewayPool)
 
 	gatewayACallbackService := service.NewGatewayACallbackService(transactionService)
-
 	gatewayBCallbackService := service.NewGatewayBCallbackService(transactionService)
 
 	return &handler.Handlers{
