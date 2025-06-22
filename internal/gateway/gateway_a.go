@@ -12,17 +12,72 @@ import (
 	"Payment-Gateway/pkg/logger"
 
 	"go.uber.org/zap"
+
+	"Payment-Gateway/internal/config"
+
+	"github.com/cenkalti/backoff/v4"
+	"github.com/sony/gobreaker"
 )
 
-// GatewayA is a skeleton for a JSON-based gateway.
 type GatewayA struct {
-	URL string
+	URL            string
+	Client         *http.Client
+	CircuitBreaker *gobreaker.CircuitBreaker
+	Config         config.ResilienceConfig
 }
 
-func NewGatewayA(url string) PaymentGateway {
-	log := logger.GetLogger().With(zap.String("func", "NewGatewayA"))
-	log.Info("Initializing GatewayA", zap.String("url", url))
-	return &GatewayA{URL: url}
+func NewGatewayA(url, gatewayName string) PaymentGateway {
+	cfg := config.GetConfig().Resilience
+	var cb *gobreaker.CircuitBreaker
+	if cfg.CircuitBreaker.Enabled {
+		cb = gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:        gatewayName,
+			MaxRequests: cfg.CircuitBreaker.MaxRequests,
+			Interval:    time.Duration(cfg.CircuitBreaker.Interval) * time.Second,
+			Timeout:     time.Duration(cfg.CircuitBreaker.Timeout) * time.Second,
+			ReadyToTrip: func(counts gobreaker.Counts) bool {
+				failRatio := float64(counts.TotalFailures) / float64(counts.Requests)
+				return counts.Requests >= 3 && failRatio >= cfg.CircuitBreaker.FailureRatio
+			},
+		})
+	}
+	return &GatewayA{
+		URL:            url,
+		Client:         &http.Client{Timeout: time.Duration(cfg.HTTPTimeoutSeconds) * time.Second},
+		CircuitBreaker: cb,
+		Config:         cfg,
+	}
+}
+
+func (g *GatewayA) doWithResilience(req *http.Request) (*http.Response, error) {
+	operation := func() (interface{}, error) {
+		if g.CircuitBreaker != nil {
+			resp, err := g.CircuitBreaker.Execute(func() (interface{}, error) {
+				return g.Client.Do(req)
+			})
+			if err != nil {
+				return nil, err
+			}
+			return resp.(*http.Response), nil
+		}
+		return g.Client.Do(req)
+	}
+
+	b := backoff.NewExponentialBackOff()
+	b.InitialInterval = time.Duration(g.Config.InitialBackoffMillis) * time.Millisecond
+	b.MaxInterval = time.Duration(g.Config.MaxBackoffMillis) * time.Millisecond
+	b.MaxElapsedTime = time.Duration(g.Config.HTTPTimeoutSeconds*g.Config.MaxRetries) * time.Second
+
+	var resp *http.Response
+	err := backoff.Retry(func() error {
+		r, err := operation()
+		if err != nil {
+			return err
+		}
+		resp = r.(*http.Response)
+		return nil
+	}, backoff.WithMaxRetries(b, uint64(g.Config.MaxRetries)))
+	return resp, err
 }
 
 // ProcessDeposit simulates HTTP JSON request/response for GatewayA, handling success, failure, and timeout.
@@ -48,9 +103,8 @@ func (g *GatewayA) ProcessDeposit(r *http.Request) (interface{}, error) {
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/deposit", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
 	log.Info("Sending deposit request to gateway")
-	resp, err := client.Do(httpReq)
+	resp, err := g.doWithResilience(httpReq)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			log.Error("GatewayA deposit timeout", zap.Error(err))
@@ -98,9 +152,8 @@ func (g *GatewayA) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/withdrawal", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
 	log.Info("Sending withdrawal request to gateway")
-	resp, err := client.Do(httpReq)
+	resp, err := g.doWithResilience(httpReq)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			log.Error("GatewayA withdrawal timeout", zap.Error(err))

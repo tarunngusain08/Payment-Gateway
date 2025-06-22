@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -11,9 +11,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type CircuitBreakerConfig struct {
+	Enabled      bool    `yaml:"enabled"`
+	MaxRequests  uint32  `yaml:"maxRequests"`
+	Interval     int     `yaml:"intervalSeconds"`
+	Timeout      int     `yaml:"timeoutSeconds"`
+	FailureRatio float64 `yaml:"failureRatio"`
+}
+
+type ResilienceConfig struct {
+	HTTPTimeoutSeconds   int                  `yaml:"httpTimeoutSeconds"`
+	MaxRetries           int                  `yaml:"maxRetries"`
+	InitialBackoffMillis int                  `yaml:"initialBackoffMillis"`
+	MaxBackoffMillis     int                  `yaml:"maxBackoffMillis"`
+	CircuitBreaker       CircuitBreakerConfig `yaml:"circuitBreaker"`
+}
+
 type GatewayConfig struct {
 	URL     string `yaml:"url"`
 	Enabled bool   `yaml:"enabled"`
+	Name    string `yaml:"name,omitempty"` // Optional name for the gateway
 }
 
 type Config struct {
@@ -26,6 +43,7 @@ type Config struct {
 		Host                  string `yaml:"host"`
 		Port                  int    `yaml:"port"`
 	} `yaml:"static"`
+	Resilience ResilienceConfig `yaml:"resilience"`
 }
 
 var (

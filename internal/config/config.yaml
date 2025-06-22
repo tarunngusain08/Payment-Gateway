@@ -1,9 +1,11 @@
 gateways:
   gatewayA:
     url: "http://{host}:{port}/mock-gateway-a"
+    name: "GatewayA"
     enabled: true
   gatewayB:
     url: "http://{host}:{port}/mock-gateway-b"
+    name: "GatewayB"
     enabled: true
 
 middlewares:
@@ -20,3 +22,15 @@ static:
   defaultTimeoutSeconds: 10
   host: "0.0.0.0"
   port: 8000
+
+resilience:
+  httpTimeoutSeconds: 2
+  maxRetries: 3
+  initialBackoffMillis: 200
+  maxBackoffMillis: 2000
+  circuitBreaker:
+    enabled: true
+    maxRequests: 3
+    intervalSeconds: 60
+    timeoutSeconds: 30
+    failureRatio: 0.6

@@ -1,6 +1,7 @@
 package main
 
 import (
+	cfg "Payment-Gateway/internal/config"
 	"Payment-Gateway/internal/gateway"
 	"Payment-Gateway/internal/handler"
 	"Payment-Gateway/internal/middleware"
@@ -20,7 +21,7 @@ import (
 )
 
 // Registry for gateway constructors
-var gatewayRegistry = map[string]func(url string) gateway.PaymentGateway{
+var gatewayRegistry = map[string]func(url, gatewayName string) gateway.PaymentGateway{
 	"gatewayA": gateway.NewGatewayA,
 	"gatewayB": gateway.NewGatewayB,
 	// Add more gateway constructors here as needed
@@ -35,13 +36,13 @@ func initializeMiddlewares(router *mux.Router) {
 }
 
 func initializeHandlers() (*handler.Handlers, error) {
-	cfg := GetConfig()
+	cfg := cfg.GetConfig()
 
 	var gateways []gateway.PaymentGateway
 	for name, gwCfg := range cfg.Gateways {
 		if gwCfg.Enabled {
 			if constructor, ok := gatewayRegistry[name]; ok {
-				gateways = append(gateways, constructor(gwCfg.URL))
+				gateways = append(gateways, constructor(gwCfg.URL, gwCfg.Name))
 			}
 		}
 	}
@@ -74,7 +75,7 @@ func NewRouter() (http.Handler, error) {
 }
 
 func StartServer() error {
-	cfg := GetConfig()
+	cfg := cfg.GetConfig()
 	router, err := NewRouter()
 	if err != nil {
 		return err

@@ -42,7 +42,7 @@ curl --location 'http://localhost:8000/withdrawal' \
 
 **Request**
 ```sh
-curl --location 'http://localhost:8000/callbacks/gateway-a' \
+curl --location 'http://localhost:8000/callback/gateway-a' \
   --header 'Content-Type: application/json' \
   --data '{
     "transaction_id": "txn123",
