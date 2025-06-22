@@ -1,8 +1,8 @@
-# Payment-Gateway
+# Payment-Service
 
 ## Project Overview
 
-Payment-Gateway is a modular, extensible payment gateway service written in Go. It supports multiple gateway integrations (e.g., GatewayA with JSON, GatewayB with SOAP/XML), transaction management, and callback handling. The codebase is designed for resilience, observability, testability, and ease of extension.
+Payment-Service is a modular, extensible payment gateway service written in Go. It supports multiple gateway integrations (e.g., GatewayA with JSON, GatewayB with SOAP/XML), transaction management, and callback handling. The codebase is designed for resilience, observability, testability, and ease of extension.
 
 ---
 
