@@ -84,7 +84,7 @@ Payment-Service is a modular, extensible payment gateway service written in Go. 
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/your-org/Payment-Gateway.git
+   git clone https://github.com/tarunngusain08/Payment-Gateway.git
    cd Payment-Gateway
    ```
 
