@@ -13,6 +13,7 @@ import (
 )
 
 func initializeMiddlewares(router *mux.Router) {
+	router.Use(middleware.ContextMiddleware)
 	router.Use(middleware.AuthMiddleware)
 	router.Use(middleware.TimeoutMiddleware(10 * time.Second))
 	router.Use(middleware.LatencyTrackerMiddleware)
