@@ -130,5 +130,7 @@ See [`docs/DummyCurls&Responses.md`](docs/DummyCurls&Responses.md) for ready-to-
 - [Build & Development Guide](docs/Build.md)
 - [Sample API Requests & Responses](docs/DummyCurls&Responses.md)
 - [OpenAPI Spec](docs/openapi.yaml)
+- [GCP Deployment Guide](docs/GCPDeployment.md)
+- [Minikube Deployment Guide](docs/MinikubeDeployment.md)
 
 ---
