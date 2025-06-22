@@ -23,6 +23,10 @@ static:
   host: "0.0.0.0"
   port: 8000
 
+cache:
+  invalidationIntervalSeconds: 60
+  ttlSeconds: 86400
+
 resilience:
   httpTimeoutSeconds: 2
   maxRetries: 3

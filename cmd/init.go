@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Payment-Gateway/internal/cache"
 	cfg "Payment-Gateway/internal/config"
 	"Payment-Gateway/internal/gateway"
 	"Payment-Gateway/internal/handler"
@@ -38,6 +39,10 @@ func initializeMiddlewares(router *mux.Router) {
 func initializeHandlers() (*handler.Handlers, error) {
 	cfg := cfg.GetConfig()
 
+	// Initialize cache with config values
+	janitorInterval := time.Duration(cfg.Cache.InvalidationIntervalSeconds) * time.Second
+	callbackCache := cache.NewMemoryCacheWithJanitor(janitorInterval, time.Duration(cfg.Cache.TTLSeconds)*time.Second)
+
 	var gateways []gateway.PaymentGateway
 	for name, gwCfg := range cfg.Gateways {
 		if gwCfg.Enabled {
@@ -56,8 +61,8 @@ func initializeHandlers() (*handler.Handlers, error) {
 
 	return &handler.Handlers{
 		TransactionHandler: handler.NewTransactionHandler(transactionService),
-		GatewayACallback:   handler.NewGatewayACallback(gatewayACallbackService),
-		GatewayBCallback:   handler.NewGatewayBCallback(gatewayBCallbackService),
+		GatewayACallback:   handler.NewGatewayACallback(gatewayACallbackService, callbackCache),
+		GatewayBCallback:   handler.NewGatewayBCallback(gatewayBCallbackService, callbackCache),
 	}, nil
 }
 

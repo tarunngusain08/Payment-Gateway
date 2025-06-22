@@ -18,11 +18,13 @@ func TestGatewayACallbackHandler_ServeHTTP_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCallback := mocks.NewMockCallback(ctrl)
-	mockCallback.EXPECT().
-		HandleCallback(gomock.Any()).
-		Return(&dtos.HandleCallbackResponse{Status: "success"}, nil)
+	mockCallback.EXPECT().HandleCallback(gomock.Any()).Return(&dtos.HandleCallbackResponse{Status: "success"}, nil)
 
-	handler := NewGatewayACallback(mockCallback)
+	mockCache := mocks.NewMockCacheStore(ctrl)
+	mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, false)
+	mockCache.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	handler := NewGatewayACallback(mockCallback, mockCache)
 	reqBody := dtos.HandleCallbackRequest{
 		TransactionID: "tx1",
 		Status:        "success",
@@ -34,6 +36,7 @@ func TestGatewayACallbackHandler_ServeHTTP_Success(t *testing.T) {
 	req := httptest.NewRequest("POST", "/callbacks/gateway-a", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
+	// config.GetConfig().Cache.TTLSeconds = 10
 	handler.ServeHTTP(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusOK {
@@ -46,7 +49,8 @@ func TestGatewayACallbackHandler_ServeHTTP_BadRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCallback := mocks.NewMockCallback(ctrl)
-	handler := NewGatewayACallback(mockCallback)
+	mockCache := mocks.NewMockCacheStore(ctrl)
+	handler := NewGatewayACallback(mockCallback, mockCache)
 	req := httptest.NewRequest("POST", "/callbacks/gateway-a", bytes.NewReader([]byte("invalid json")))
 	w := httptest.NewRecorder()
 
@@ -62,11 +66,12 @@ func TestGatewayACallbackHandler_ServeHTTP_ServiceError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCallback := mocks.NewMockCallback(ctrl)
-	mockCallback.EXPECT().
-		HandleCallback(gomock.Any()).
-		Return(nil, errors.New("service error"))
+	mockCallback.EXPECT().HandleCallback(gomock.Any()).Return(nil, errors.New("service error"))
 
-	handler := NewGatewayACallback(mockCallback)
+	mockCache := mocks.NewMockCacheStore(ctrl)
+	mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, false)
+
+	handler := NewGatewayACallback(mockCallback, mockCache)
 	reqBody := dtos.HandleCallbackRequest{
 		TransactionID: "tx1",
 		Status:        "success",

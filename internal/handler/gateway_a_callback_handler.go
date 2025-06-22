@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"Payment-Gateway/internal/cache"
 	"Payment-Gateway/internal/dtos"
 	"Payment-Gateway/internal/middleware"
 	"Payment-Gateway/internal/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -12,14 +14,19 @@ import (
 
 type GatewayACallbackHandler struct {
 	Service service.Callback
+	Cache   cache.CacheStore
 }
 
-func NewGatewayACallback(service service.Callback) GatewayACallbackHandler {
-	return GatewayACallbackHandler{Service: service}
+func NewGatewayACallback(service service.Callback, c cache.CacheStore) GatewayACallbackHandler {
+	return GatewayACallbackHandler{
+		Service: service,
+		Cache:   c,
+	}
 }
 
 func (h *GatewayACallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log := middleware.LoggerFromContext(r.Context()).With(zap.String("func", "GatewayACallbackHandler.ServeHTTP"))
+	ctx := r.Context()
+	log := middleware.LoggerFromContext(ctx).With(zap.String("func", "GatewayACallbackHandler.ServeHTTP"))
 	log.Info("Received GatewayA callback")
 
 	var req dtos.HandleCallbackRequest
@@ -43,11 +50,23 @@ func (h *GatewayACallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	cacheKey := fmt.Sprintf("callback:gatewayA:%s:%s", req.TransactionID, req.GatewayRef)
+	if cachedResp, found := h.Cache.Get(ctx, cacheKey); found {
+		log.Info("Returning cached response for duplicate callback")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(cachedResp)
+		return
+	}
+
 	resp, err := h.Service.HandleCallback(req)
 	if err != nil {
 		log.Error("GatewayA callback processing failed", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if err := h.Cache.Set(ctx, cacheKey, resp); err != nil {
+		log.Error("Failed to cache response", zap.Error(err))
 	}
 
 	log.Info("GatewayA callback processed successfully")

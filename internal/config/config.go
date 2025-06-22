@@ -33,6 +33,11 @@ type GatewayConfig struct {
 	Name    string `yaml:"name,omitempty"` // Optional name for the gateway
 }
 
+type CacheConfig struct {
+	InvalidationIntervalSeconds int `yaml:"invalidationIntervalSeconds"`
+	TTLSeconds                  int `yaml:"ttlSeconds"`
+}
+
 type Config struct {
 	Gateways    map[string]GatewayConfig `yaml:"gateways"`
 	Middlewares []string                 `yaml:"middlewares"`
@@ -44,6 +49,7 @@ type Config struct {
 		Port                  int    `yaml:"port"`
 	} `yaml:"static"`
 	Resilience ResilienceConfig `yaml:"resilience"`
+	Cache      CacheConfig      `yaml:"cache"`
 }
 
 var (

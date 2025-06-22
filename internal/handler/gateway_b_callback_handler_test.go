@@ -22,7 +22,15 @@ func TestGatewayBCallbackHandler_ServeHTTP_Success(t *testing.T) {
 		HandleCallback(gomock.Any()).
 		Return(&dtos.HandleCallbackResponse{Status: "success"}, nil)
 
-	handler := NewGatewayBCallback(mockCallback)
+	mockCache := mocks.NewMockCacheStore(ctrl)
+	mockCache.EXPECT().
+		Get(gomock.Any(), gomock.Any()).
+		Return(nil, false)
+	mockCache.EXPECT().
+		Set(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil)
+
+	handler := NewGatewayBCallback(mockCallback, mockCache)
 	reqBody := dtos.HandleCallbackRequest{
 		TransactionID: "tx2",
 		Status:        "success",
@@ -47,7 +55,8 @@ func TestGatewayBCallbackHandler_ServeHTTP_BadRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCallback := mocks.NewMockCallback(ctrl)
-	handler := NewGatewayBCallback(mockCallback)
+	mockCache := mocks.NewMockCacheStore(ctrl)
+	handler := NewGatewayBCallback(mockCallback, mockCache)
 	req := httptest.NewRequest("POST", "/callbacks/gateway-b", bytes.NewReader([]byte("invalid xml")))
 	req.Header.Set("Content-Type", "application/xml")
 	w := httptest.NewRecorder()
@@ -68,7 +77,12 @@ func TestGatewayBCallbackHandler_ServeHTTP_ServiceError(t *testing.T) {
 		HandleCallback(gomock.Any()).
 		Return(nil, errors.New("service error"))
 
-	handler := NewGatewayBCallback(mockCallback)
+	mockCache := mocks.NewMockCacheStore(ctrl)
+	mockCache.EXPECT().
+		Get(gomock.Any(), gomock.Any()).
+		Return(nil, false)
+
+	handler := NewGatewayBCallback(mockCallback, mockCache)
 	reqBody := dtos.HandleCallbackRequest{
 		TransactionID: "tx2",
 		Status:        "success",

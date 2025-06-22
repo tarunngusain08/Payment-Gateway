@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"Payment-Gateway/internal/cache"
 	"Payment-Gateway/internal/dtos"
 	"Payment-Gateway/internal/middleware"
 	"Payment-Gateway/internal/service"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -13,14 +15,19 @@ import (
 
 type GatewayBCallbackHandler struct {
 	Service service.Callback
+	Cache   cache.CacheStore
 }
 
-func NewGatewayBCallback(service service.Callback) GatewayBCallbackHandler {
-	return GatewayBCallbackHandler{Service: service}
+func NewGatewayBCallback(service service.Callback, c cache.CacheStore) GatewayBCallbackHandler {
+	return GatewayBCallbackHandler{
+		Service: service,
+		Cache:   c,
+	}
 }
 
 func (h *GatewayBCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log := middleware.LoggerFromContext(r.Context()).With(zap.String("func", "GatewayBCallbackHandler.ServeHTTP"))
+	ctx := r.Context()
+	log := middleware.LoggerFromContext(ctx).With(zap.String("func", "GatewayBCallbackHandler.ServeHTTP"))
 	log.Info("Received GatewayB callback")
 
 	body, err := io.ReadAll(r.Body)
@@ -36,6 +43,7 @@ func (h *GatewayBCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	cacheKey := fmt.Sprintf("callback:gatewayB:%s:%s", req.TransactionID, req.GatewayRef)
 	log = log.With(
 		zap.String("transaction_id", req.TransactionID),
 		zap.String("gateway_ref", req.GatewayRef),
@@ -50,11 +58,22 @@ func (h *GatewayBCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	if cachedResp, found := h.Cache.Get(ctx, cacheKey); found {
+		log.Info("Returning cached response for duplicate callback")
+		w.WriteHeader(http.StatusOK)
+		xml.NewEncoder(w).Encode(cachedResp)
+		return
+	}
+
 	resp, err := h.Service.HandleCallback(req)
 	if err != nil {
 		log.Error("GatewayB callback processing failed", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if err := h.Cache.Set(ctx, cacheKey, resp); err != nil {
+		log.Error("Failed to cache callback response", zap.Error(err))
 	}
 
 	log.Info("GatewayB callback processed successfully")
