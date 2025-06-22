@@ -49,6 +49,7 @@ type Config struct {
 		APIVersion            string `yaml:"apiVersion"`
 		ServiceName           string `yaml:"serviceName"`
 		DefaultTimeoutSeconds int    `yaml:"defaultTimeoutSeconds"`
+		GatewayTimeoutSeconds int    `yaml:"gatewayTimeoutSeconds"`
 		Host                  string `yaml:"host"`
 		Port                  int    `yaml:"port"`
 	} `yaml:"static"`

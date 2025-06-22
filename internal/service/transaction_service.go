@@ -17,16 +17,18 @@ import (
 )
 
 type TransactionService struct {
-	repository repository.TransactionRepository
-	Gateway    GatewayPool
-	WorkerPool *WorkerPool
+	repository      repository.TransactionRepository
+	Gateway         GatewayPool
+	WorkerPool      *WorkerPool
+	TimeoutDuration time.Duration // Injected timeout for context
 }
 
-func NewTransactionService(repo repository.TransactionRepository, gateway GatewayPool, workerPool *WorkerPool) Transaction {
+func NewTransactionService(repo repository.TransactionRepository, gateway GatewayPool, workerPool *WorkerPool, timeout time.Duration) Transaction {
 	return &TransactionService{
-		repository: repo,
-		Gateway:    gateway,
-		WorkerPool: workerPool,
+		repository:      repo,
+		Gateway:         gateway,
+		WorkerPool:      workerPool,
+		TimeoutDuration: timeout,
 	}
 }
 
@@ -64,7 +66,8 @@ func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest)
 
 	log.Info("Processing deposit with gateway")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Use injected timeout duration
+	ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutDuration)
 	defer cancel()
 
 	resp, err := s.processWithWorkerPool(ctx, func(ctx context.Context) (interface{}, error) {
@@ -118,7 +121,8 @@ func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRe
 
 	log.Info("Processing withdrawal with gateway")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Use injected timeout duration
+	ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutDuration)
 	defer cancel()
 
 	resp, err := s.processWithWorkerPool(ctx, func(ctx context.Context) (interface{}, error) {

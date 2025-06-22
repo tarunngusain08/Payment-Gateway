@@ -58,7 +58,8 @@ func initializeHandlers() (*handler.Handlers, error) {
 
 	transactionRepo := repository.NewInMemoryTransactionRepository()
 	gatewayPool := service.NewGatewayPool(gateways)
-	transactionService := service.NewTransactionService(transactionRepo, gatewayPool, workerPool)
+	gatewayTimeout := time.Duration(cfg.Static.GatewayTimeoutSeconds) * time.Second
+	transactionService := service.NewTransactionService(transactionRepo, gatewayPool, workerPool, gatewayTimeout)
 
 	gatewayACallbackService := service.NewGatewayACallbackService(transactionService)
 	gatewayBCallbackService := service.NewGatewayBCallbackService(transactionService)

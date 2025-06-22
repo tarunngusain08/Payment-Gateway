@@ -20,6 +20,7 @@ static:
   apiVersion: "v1"
   serviceName: "Payment-Gateway"
   defaultTimeoutSeconds: 10
+  gatewayTimeoutSeconds: 5
   host: "0.0.0.0"
   port: 8000
 
