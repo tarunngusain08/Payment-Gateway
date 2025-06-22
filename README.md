@@ -134,7 +134,7 @@ See [`docs/DummyCurls&Responses.md`](docs/DummyCurls&Responses.md) for ready-to-
 ---
 
 ## Documentation
-
+- [High Level Design](docs/HighLevelDesign.md)
 - [Build & Development Guide](docs/Build.md)
 - [Sample API Requests & Responses](docs/DummyCurls&Responses.md)
 - [OpenAPI Spec](docs/openapi.yaml)
