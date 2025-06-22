@@ -38,6 +38,10 @@ type CacheConfig struct {
 	TTLSeconds                  int `yaml:"ttlSeconds"`
 }
 
+type WorkerPoolConfig struct {
+	NumWorkers int `yaml:"numWorkers"`
+}
+
 type Config struct {
 	Gateways    map[string]GatewayConfig `yaml:"gateways"`
 	Middlewares []string                 `yaml:"middlewares"`
@@ -50,6 +54,7 @@ type Config struct {
 	} `yaml:"static"`
 	Resilience ResilienceConfig `yaml:"resilience"`
 	Cache      CacheConfig      `yaml:"cache"`
+	WorkerPool WorkerPoolConfig `yaml:"workerPool"`
 }
 
 var (

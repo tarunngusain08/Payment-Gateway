@@ -43,6 +43,10 @@ func initializeHandlers() (*handler.Handlers, error) {
 	janitorInterval := time.Duration(cfg.Cache.InvalidationIntervalSeconds) * time.Second
 	callbackCache := cache.NewMemoryCacheWithJanitor(janitorInterval, time.Duration(cfg.Cache.TTLSeconds)*time.Second)
 
+	// Initialize worker pool
+	numWorkers := cfg.WorkerPool.NumWorkers
+	workerPool := service.NewWorkerPool(numWorkers)
+
 	var gateways []gateway.PaymentGateway
 	for name, gwCfg := range cfg.Gateways {
 		if gwCfg.Enabled {
@@ -54,7 +58,7 @@ func initializeHandlers() (*handler.Handlers, error) {
 
 	transactionRepo := repository.NewInMemoryTransactionRepository()
 	gatewayPool := service.NewGatewayPool(gateways)
-	transactionService := service.NewTransactionService(transactionRepo, gatewayPool)
+	transactionService := service.NewTransactionService(transactionRepo, gatewayPool, workerPool)
 
 	gatewayACallbackService := service.NewGatewayACallbackService(transactionService)
 	gatewayBCallbackService := service.NewGatewayBCallbackService(transactionService)

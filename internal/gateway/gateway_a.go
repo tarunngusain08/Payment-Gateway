@@ -15,6 +15,8 @@ import (
 
 	"Payment-Gateway/internal/config"
 
+	"Payment-Gateway/internal/models"
+
 	"github.com/cenkalti/backoff/v4"
 	"github.com/sony/gobreaker"
 )
@@ -85,19 +87,27 @@ func (g *GatewayA) ProcessDeposit(r *http.Request) (interface{}, error) {
 		zap.String("func", "GatewayA.ProcessDeposit"),
 		zap.String("url", g.URL),
 	)
+	var modelReq models.DepositRequest
 	var req dtos.GatewayADepositRequest
 	if r != nil {
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&modelReq); err != nil {
 			log.Warn("Failed to decode deposit request", zap.Error(err))
 			return nil, err
+		}
+		req = dtos.GatewayADepositRequest{
+			Account: modelReq.Account,
+			Amount:  modelReq.Amount,
 		}
 	} else {
 		req = dtos.GatewayADepositRequest{Account: "demo", Amount: 100}
 	}
 
 	payload, _ := json.Marshal(req)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	// Use context from incoming request
+	ctx := context.Background()
+	if r != nil {
+		ctx = r.Context()
+	}
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/deposit", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -134,19 +144,27 @@ func (g *GatewayA) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 		zap.String("func", "GatewayA.ProcessWithdrawal"),
 		zap.String("url", g.URL),
 	)
+	var modelReq models.WithdrawalRequest
 	var req dtos.GatewayAWithdrawalRequest
 	if r != nil {
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&modelReq); err != nil {
 			log.Warn("Failed to decode withdrawal request", zap.Error(err))
 			return nil, err
+		}
+		req = dtos.GatewayAWithdrawalRequest{
+			Account: modelReq.Account,
+			Amount:  modelReq.Amount,
 		}
 	} else {
 		req = dtos.GatewayAWithdrawalRequest{Account: "demo", Amount: 100}
 	}
 
 	payload, _ := json.Marshal(req)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	// Use context from incoming request
+	ctx := context.Background()
+	if r != nil {
+		ctx = r.Context()
+	}
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/withdrawal", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/json")

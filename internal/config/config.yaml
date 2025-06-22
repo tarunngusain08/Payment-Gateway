@@ -38,3 +38,6 @@ resilience:
     intervalSeconds: 60
     timeoutSeconds: 30
     failureRatio: 0.6
+
+workerPool:
+  numWorkers: 10

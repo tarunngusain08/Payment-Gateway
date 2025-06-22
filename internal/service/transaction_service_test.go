@@ -10,6 +10,8 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+var workerPool = NewWorkerPool(1)
+
 func TestCreateAndProcessDeposit_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -25,7 +27,7 @@ func TestCreateAndProcessDeposit_Success(t *testing.T) {
 	mockGateway.EXPECT().ProcessDeposit(gomock.Any()).Return(nil, nil)
 	mockRepo.EXPECT().UpdateTransactionStatus(gomock.Any(), constants.StatusSuccess).Return(nil)
 
-	svc := NewTransactionService(mockRepo, mockGatewayPool)
+	svc := NewTransactionService(mockRepo, mockGatewayPool, workerPool)
 	_, err := svc.CreateAndProcessDeposit(depositReq)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -47,7 +49,7 @@ func TestCreateAndProcessDeposit_GatewayError(t *testing.T) {
 	mockGateway.EXPECT().ProcessDeposit(gomock.Any()).Return(nil, errors.New("gateway error"))
 	mockRepo.EXPECT().UpdateTransactionStatus(gomock.Any(), constants.StatusFailed).Return(nil)
 
-	svc := NewTransactionService(mockRepo, mockGatewayPool)
+	svc := NewTransactionService(mockRepo, mockGatewayPool, workerPool)
 	_, err := svc.CreateAndProcessDeposit(depositReq)
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -69,7 +71,7 @@ func TestCreateAndProcessWithdrawal_Success(t *testing.T) {
 	mockGateway.EXPECT().ProcessWithdrawal(gomock.Any()).Return(nil, nil)
 	mockRepo.EXPECT().UpdateTransactionStatus(gomock.Any(), constants.StatusSuccess).Return(nil)
 
-	svc := NewTransactionService(mockRepo, mockGatewayPool)
+	svc := NewTransactionService(mockRepo, mockGatewayPool, workerPool)
 	_, err := svc.CreateAndProcessWithdrawal(withdrawalReq)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -91,7 +93,7 @@ func TestCreateAndProcessWithdrawal_GatewayError(t *testing.T) {
 	mockGateway.EXPECT().ProcessWithdrawal(gomock.Any()).Return(nil, errors.New("gateway error"))
 	mockRepo.EXPECT().UpdateTransactionStatus(gomock.Any(), constants.StatusFailed).Return(nil)
 
-	svc := NewTransactionService(mockRepo, mockGatewayPool)
+	svc := NewTransactionService(mockRepo, mockGatewayPool, workerPool)
 	_, err := svc.CreateAndProcessWithdrawal(withdrawalReq)
 	if err == nil {
 		t.Fatal("expected error, got nil")

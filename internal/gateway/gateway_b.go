@@ -3,6 +3,7 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"Payment-Gateway/internal/dtos"
+	"Payment-Gateway/internal/models"
 	"Payment-Gateway/pkg/logger"
 
 	"Payment-Gateway/internal/config"
@@ -86,14 +88,31 @@ func (g *GatewayB) ProcessDeposit(r *http.Request) (interface{}, error) {
 		zap.String("func", "GatewayB.ProcessDeposit"),
 		zap.String("url", g.URL),
 	)
+	var modelReq models.DepositRequest
+	var depositReq dtos.SOAPDepositRequest
+	if r != nil {
+		if err := json.NewDecoder(r.Body).Decode(&modelReq); err != nil {
+			log.Warn("Failed to decode deposit request", zap.Error(err))
+			return nil, err
+		}
+		depositReq = dtos.SOAPDepositRequest{
+			Account: modelReq.Account,
+			Amount:  modelReq.Amount,
+		}
+	} else {
+		depositReq = dtos.SOAPDepositRequest{Account: "demo", Amount: 100}
+	}
 	req := &dtos.SOAPEnvelope{
 		Body: dtos.SOAPBody{
-			DepositRequest: &dtos.SOAPDepositRequest{Account: "demo", Amount: 100},
+			DepositRequest: &depositReq,
 		},
 	}
 	payload, _ := xml.Marshal(req)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	// Use context from incoming request
+	ctx := context.Background()
+	if r != nil {
+		ctx = r.Context()
+	}
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/deposit", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/xml")
@@ -131,14 +150,31 @@ func (g *GatewayB) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 		zap.String("func", "GatewayB.ProcessWithdrawal"),
 		zap.String("url", g.URL),
 	)
+	var modelReq models.WithdrawalRequest
+	var withdrawalReq dtos.SOAPWithdrawalRequest
+	if r != nil {
+		if err := json.NewDecoder(r.Body).Decode(&modelReq); err != nil {
+			log.Warn("Failed to decode withdrawal request", zap.Error(err))
+			return nil, err
+		}
+		withdrawalReq = dtos.SOAPWithdrawalRequest{
+			Account: modelReq.Account,
+			Amount:  modelReq.Amount,
+		}
+	} else {
+		withdrawalReq = dtos.SOAPWithdrawalRequest{Account: "demo", Amount: 100}
+	}
 	req := &dtos.SOAPEnvelope{
 		Body: dtos.SOAPBody{
-			WithdrawalRequest: &dtos.SOAPWithdrawalRequest{Account: "demo", Amount: 100},
+			WithdrawalRequest: &withdrawalReq,
 		},
 	}
 	payload, _ := xml.Marshal(req)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	// Use context from incoming request
+	ctx := context.Background()
+	if r != nil {
+		ctx = r.Context()
+	}
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", g.URL+"/withdrawal", bytes.NewBuffer(payload))
 	httpReq.Header.Set("Content-Type", "application/xml")

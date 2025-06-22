@@ -5,6 +5,10 @@ import (
 	"Payment-Gateway/internal/models"
 	"Payment-Gateway/internal/repository"
 	"Payment-Gateway/pkg/logger"
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,13 +19,19 @@ import (
 type TransactionService struct {
 	repository repository.TransactionRepository
 	Gateway    GatewayPool
+	WorkerPool *WorkerPool
 }
 
-func NewTransactionService(repo repository.TransactionRepository, gateway GatewayPool) Transaction {
+func NewTransactionService(repo repository.TransactionRepository, gateway GatewayPool, workerPool *WorkerPool) Transaction {
 	return &TransactionService{
 		repository: repo,
 		Gateway:    gateway,
+		WorkerPool: workerPool,
 	}
+}
+
+func (s *TransactionService) processWithWorkerPool(ctx context.Context, task Task) (interface{}, error) {
+	return s.WorkerPool.Submit(ctx, task)
 }
 
 func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest) (*models.Transaction, error) {
@@ -53,13 +63,26 @@ func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest)
 	}
 
 	log.Info("Processing deposit with gateway")
-	resp, err := gateway.ProcessDeposit(nil)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := s.processWithWorkerPool(ctx, func(ctx context.Context) (interface{}, error) {
+		bodyBytes, err := json.Marshal(req)
+		if err != nil {
+			log.Error("Failed to marshal deposit request", zap.Error(err))
+			return nil, err
+		}
+		httpReq, _ := http.NewRequestWithContext(ctx, http.MethodPost, "", bytes.NewReader(bodyBytes))
+		httpReq.Header.Set("Content-Type", "application/json")
+		return gateway.ProcessDeposit(httpReq)
+	})
+
 	if err != nil {
 		log.Error("Gateway deposit failed", zap.Error(err))
 		s.repository.UpdateTransactionStatus(tx.ID, constants.StatusFailed)
 		return tx, err
 	}
-
 	s.repository.UpdateTransactionStatus(tx.ID, constants.StatusSuccess)
 	log.Info("Deposit processed successfully", zap.Any("gateway_response", resp))
 	return tx, nil
@@ -94,13 +117,27 @@ func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRe
 	}
 
 	log.Info("Processing withdrawal with gateway")
-	resp, err := gateway.ProcessWithdrawal(nil)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := s.processWithWorkerPool(ctx, func(ctx context.Context) (interface{}, error) {
+		bodyBytes, err := json.Marshal(req)
+		if err != nil {
+			log.Error("Failed to marshal withdrawal request", zap.Error(err))
+			return nil, err
+		}
+		httpReq, _ := http.NewRequestWithContext(ctx, http.MethodPost, "", bytes.NewReader(bodyBytes))
+		httpReq.Header.Set("Content-Type", "application/json")
+
+		return gateway.ProcessWithdrawal(httpReq)
+	})
+
 	if err != nil {
 		log.Error("Gateway withdrawal failed", zap.Error(err))
 		s.repository.UpdateTransactionStatus(tx.ID, constants.StatusFailed)
 		return tx, err
 	}
-
 	err = s.repository.UpdateTransactionStatus(tx.ID, constants.StatusSuccess)
 	if err != nil {
 		log.Error("Failed to update transaction status", zap.Error(err))

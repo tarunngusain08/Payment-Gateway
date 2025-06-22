@@ -38,6 +38,14 @@ Payment-Gateway is a modular, extensible payment gateway service written in Go. 
 - **Transaction Management:**  
   The `TransactionService` coordinates transaction creation, processing via gateways, and status updates. The repository uses a thread-safe in-memory store for demo purposes.
 
+- **Resilience Patterns:**  
+  - **Exponential Backoff Retries:** All gateway calls use exponential backoff with configurable retry limits to handle transient failures.
+  - **Circuit Breaking:** Circuit breaker pattern is implemented for each gateway to prevent cascading failures and allow recovery.
+  - **Timeouts:** All gateway and worker pool operations are context-aware and use timeouts to avoid indefinite blocking.
+  - **Worker Pool:** A worker pool is used to process deposit and withdrawal requests asynchronously, supporting high throughput and context cancellation.
+  - **Goroutine Leak Prevention:** All asynchronous operations are context-aware, ensuring goroutines are not leaked and are properly cleaned up on cancellation.
+  - **Idempotency Caching:** Caching is used to ensure idempotency for transaction requests, preventing duplicate processing.
+
 - **Testing:**  
   - Extensive unit tests for all services, handlers, and repositories.
   - Use of GoMock for mocking interfaces.
