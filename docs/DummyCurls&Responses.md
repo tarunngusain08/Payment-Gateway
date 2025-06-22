@@ -91,5 +91,6 @@ curl --location 'http://localhost:8000/callback/gateway-b' \
   <Message>Gateway B callback processed for transaction: txn456, ref: gwref456</Message>
 </HandleCallbackResponse>
 ```
-![Uploading Screenshot 2025-06-22 at 12.01.38 PM.png…]()
+<img width="900" alt="Screenshot 2025-06-22 at 12 01 38 PM" src="https://github.com/user-attachments/assets/cf731604-d5a8-46a2-8a28-52b0f36e290e" />
+
 
