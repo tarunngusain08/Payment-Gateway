@@ -8,8 +8,8 @@ import (
 
 func setupRoutes(router *mux.Router, handlers *handler.Handlers) {
 	// Payment routes
-	router.HandleFunc("/deposit", handlers.DepositHandler).Methods("POST")
-	router.HandleFunc("/withdrawal", handlers.WithdrawalHandler).Methods("POST")
+	router.HandleFunc("/deposit", handlers.TransactionHandler.Deposit).Methods("POST")
+	router.HandleFunc("/withdrawal", handlers.TransactionHandler.Withdrawal).Methods("POST")
 
 	// Callback routes
 	router.HandleFunc("/callbacks/gateway-a", handlers.GatewayACallback.ServeHTTP).Methods("POST")

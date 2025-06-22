@@ -1,6 +1,6 @@
 package dtos
 
-// GatewayACallbackRequest represents the request structure for Gateway A callback
+import errors "Payment-Gateway/pkg/error"
 
 type HandleCallbackRequest struct {
 	TransactionID string                 `json:"transaction_id"`
@@ -15,4 +15,17 @@ type HandleCallbackRequest struct {
 type HandleCallbackResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+func (r *HandleCallbackRequest) Validate() error {
+	if r.TransactionID == "" || r.GatewayRef == "" {
+		return errors.ErrMissingRequiredFields
+	}
+	if r.Amount <= 0 {
+		return errors.ErrMissingAmount
+	}
+	if r.Currency == "" {
+		return errors.ErrMissingCurrency
+	}
+	return nil
 }

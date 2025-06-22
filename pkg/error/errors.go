@@ -17,6 +17,7 @@ var (
 	ErrInvalidAccount          = errors.New("invalid account details")
 	ErrCallbackInvalid         = errors.New("invalid callback data")
 	ErrCallbackProcessing      = errors.New("callback processing failed")
+	ErrNoGatewayAvailable      = errors.New("no gateways available")
 
 	// Common Callback Validation Errors
 	ErrMissingTransactionID  = errors.New("invalid callback: missing transaction ID")
@@ -24,4 +25,7 @@ var (
 	ErrMissingAmount         = errors.New("invalid transaction: missing amount")
 	ErrMissingCurrency       = errors.New("invalid transaction: missing currency")
 	ErrMissingRequiredFields = errors.New("invalid callback: missing required fields")
+
+	ErrAccountRequired      = errors.New("account is required")
+	ErrAmountMustBePositive = errors.New("amount must be positive")
 )

@@ -2,7 +2,6 @@ package service
 
 import (
 	"Payment-Gateway/internal/constants"
-	"Payment-Gateway/internal/gateway"
 	"Payment-Gateway/internal/models"
 	"Payment-Gateway/internal/repository"
 	"time"
@@ -12,15 +11,17 @@ import (
 
 type TransactionService struct {
 	repository repository.TransactionRepository
+	Gateway    GatewayPool
 }
 
-func NewTransactionService(repo repository.TransactionRepository) *TransactionService {
+func NewTransactionService(repo repository.TransactionRepository, gateway GatewayPool) Transaction {
 	return &TransactionService{
 		repository: repo,
+		Gateway:    gateway,
 	}
 }
 
-func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest, gw gateway.PaymentGateway) (*models.Transaction, error) {
+func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest) (*models.Transaction, error) {
 	tx := &models.Transaction{
 		ID:        uuid.NewString(),
 		Type:      constants.TypeDeposit,
@@ -34,8 +35,13 @@ func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest,
 		return nil, err
 	}
 
+	gateway, err := s.Gateway.GetRoundRobinGateway()
+	if err != nil {
+		return nil, err
+	}
+
 	// Forward to gateway
-	resp, err := gw.ProcessDeposit(nil)
+	resp, err := gateway.ProcessDeposit(nil)
 	if err != nil {
 		s.repository.UpdateTransactionStatus(tx.ID, constants.StatusFailed)
 		return tx, err
@@ -46,7 +52,7 @@ func (s *TransactionService) CreateAndProcessDeposit(req *models.DepositRequest,
 	return tx, nil
 }
 
-func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRequest, gw gateway.PaymentGateway) (*models.Transaction, error) {
+func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRequest) (*models.Transaction, error) {
 	tx := &models.Transaction{
 		ID:        uuid.NewString(),
 		Type:      constants.TypeWithdrawal,
@@ -60,7 +66,12 @@ func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRe
 		return nil, err
 	}
 
-	resp, err := gw.ProcessWithdrawal(nil)
+	gateway, err := s.Gateway.GetRoundRobinGateway()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := gateway.ProcessWithdrawal(nil)
 	if err != nil {
 		s.repository.UpdateTransactionStatus(tx.ID, constants.StatusFailed)
 		return tx, err
@@ -76,4 +87,9 @@ func (s *TransactionService) CreateAndProcessWithdrawal(req *models.WithdrawalRe
 
 func (s *TransactionService) GetTransaction(id string) (*models.Transaction, bool) {
 	return s.repository.GetTransactionByID(id)
+}
+
+// Implement UpdateStatus method
+func (s *TransactionService) UpdateStatus(id string, status constants.TransactionStatus) error {
+	return s.repository.UpdateTransactionStatus(id, status)
 }

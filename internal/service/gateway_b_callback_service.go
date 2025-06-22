@@ -1,47 +1,29 @@
 package service
 
 import (
+	"Payment-Gateway/internal/constants"
 	"Payment-Gateway/internal/dtos"
-	"Payment-Gateway/internal/gateway"
-	errors "Payment-Gateway/pkg/error"
 	"fmt"
 )
 
 type GatewayBCallbackService struct {
-	gateway gateway.PaymentGateway
+	transactionService Transaction
 }
 
-func NewGatewayBCallbackService() (Callback, error) {
-	gw, err := gateway.GetGatewayByID("B")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize gateway B: %w", err)
+func NewGatewayBCallbackService(transactionService Transaction) Callback {
+	return &GatewayACallbackService{
+		transactionService: transactionService,
 	}
-
-	return &GatewayBCallbackService{
-		gateway: gw,
-	}, nil
 }
 
 func (g *GatewayBCallbackService) HandleCallback(req dtos.HandleCallbackRequest) (*dtos.HandleCallbackResponse, error) {
-	// Validate required fields for Gateway B
-	if req.TransactionID == "" || req.GatewayRef == "" {
-		return nil, errors.ErrMissingRequiredFields
+	if err := req.Validate(); err != nil {
+		return nil, err
 	}
 
-	// Additional validation for Gateway B specific requirements
-	if req.Amount <= 0 {
-		return nil, errors.ErrMissingAmount
-	}
-
-	if req.Currency == "" {
-		return nil, errors.ErrMissingCurrency
-	}
-
-	if err := g.gateway.HandleCallback(req); err != nil {
-		return &dtos.HandleCallbackResponse{
-			Status:  "failed",
-			Message: fmt.Sprintf("Gateway B callback processing failed: %v", err),
-		}, err
+	status := constants.TransactionStatus(req.Status)
+	if err := g.transactionService.UpdateStatus(req.TransactionID, status); err != nil {
+		return nil, fmt.Errorf("failed to update transaction status: %w", err)
 	}
 
 	return &dtos.HandleCallbackResponse{

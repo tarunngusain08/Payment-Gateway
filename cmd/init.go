@@ -1,11 +1,11 @@
 package main
 
 import (
+	"Payment-Gateway/internal/gateway"
 	"Payment-Gateway/internal/handler"
 	"Payment-Gateway/internal/middleware"
 	"Payment-Gateway/internal/repository"
 	"Payment-Gateway/internal/service"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -22,23 +22,22 @@ func initializeMiddlewares(router *mux.Router) {
 
 func initializeHandlers() (*handler.Handlers, error) {
 	transactionRepo := repository.NewInMemoryTransactionRepository()
-	transactionService := service.NewTransactionService(transactionRepo)
+	gatewayPool := service.NewGatewayPool(
+		[]gateway.PaymentGateway{
+			gateway.NewGatewayA(),
+			gateway.NewGatewayB(),
+		},
+	)
+	transactionService := service.NewTransactionService(transactionRepo, gatewayPool)
 
-	gatewayACallback, err := service.NewGatewayACallbackService()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize gateway A callback: %w", err)
-	}
+	gatewayACallbackService := service.NewGatewayACallbackService(transactionService)
 
-	gatewayBCallback, err := service.NewGatewayBCallbackService()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize gateway B callback: %w", err)
-	}
+	gatewayBCallbackService := service.NewGatewayBCallbackService(transactionService)
 
 	return &handler.Handlers{
-		DepositHandler:    handler.NewDepositHandler(transactionService),
-		WithdrawalHandler: handler.NewWithdrawalHandler(transactionService),
-		GatewayACallback:  handler.NewGatewayACallback(gatewayACallback),
-		GatewayBCallback:  handler.NewGatewayBCallback(gatewayBCallback),
+		TransactionHandler: handler.NewTransactionHandler(transactionService),
+		GatewayACallback:   handler.NewGatewayACallback(gatewayACallbackService),
+		GatewayBCallback:   handler.NewGatewayBCallback(gatewayBCallbackService),
 	}, nil
 }
 

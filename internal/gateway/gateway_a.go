@@ -1,41 +1,34 @@
 package gateway
 
 import (
-	"Payment-Gateway/internal/dtos"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
+
+	"Payment-Gateway/internal/dtos"
 )
 
 // GatewayA is a skeleton for a JSON-based gateway.
 type GatewayA struct{}
 
-// DepositRequest represents a JSON deposit request for GatewayA.
-type DepositRequest struct {
-	Account string  `json:"account"`
-	Amount  float64 `json:"amount"`
-}
-
-// WithdrawalRequest represents a JSON withdrawal request for GatewayA.
-type WithdrawalRequest struct {
-	Account string  `json:"account"`
-	Amount  float64 `json:"amount"`
+func NewGatewayA() PaymentGateway {
+	return &GatewayA{}
 }
 
 const gatewayAURL = "http://mock-gateway-a/deposit" // Simulated endpoint
 
 // ProcessDeposit simulates HTTP JSON request/response for GatewayA, handling success, failure, and timeout.
 func (g *GatewayA) ProcessDeposit(r *http.Request) (interface{}, error) {
-	var req DepositRequest
+	var req dtos.GatewayADepositRequest
 	if r != nil {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			return nil, err
 		}
 	} else {
-		req = DepositRequest{Account: "demo", Amount: 100}
+		req = dtos.GatewayADepositRequest{Account: "demo", Amount: 100}
 	}
 
 	payload, _ := json.Marshal(req)
@@ -68,13 +61,13 @@ func (g *GatewayA) ProcessDeposit(r *http.Request) (interface{}, error) {
 
 // ProcessWithdrawal simulates HTTP JSON request/response for GatewayA, handling success, failure, and timeout.
 func (g *GatewayA) ProcessWithdrawal(r *http.Request) (interface{}, error) {
-	var req WithdrawalRequest
+	var req dtos.GatewayAWithdrawalRequest
 	if r != nil {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			return nil, err
 		}
 	} else {
-		req = WithdrawalRequest{Account: "demo", Amount: 100}
+		req = dtos.GatewayAWithdrawalRequest{Account: "demo", Amount: 100}
 	}
 
 	payload, _ := json.Marshal(req)
@@ -103,11 +96,4 @@ func (g *GatewayA) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-// HandleCallback processes the callback for GatewayA.
-func (g *GatewayA) HandleCallback(req dtos.HandleCallbackRequest) error {
-	// Implement your callback logic here, e.g., update transaction status, etc.
-	// For now, just simulate success.
-	return nil
 }

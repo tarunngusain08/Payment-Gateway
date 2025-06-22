@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"Payment-Gateway/internal/dtos"
 	"bytes"
 	"context"
 	"encoding/xml"
@@ -9,42 +8,24 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"Payment-Gateway/internal/dtos"
 )
 
 // GatewayB is a skeleton for a SOAP-based gateway.
 type GatewayB struct{}
 
-type SOAPEnvelope struct {
-	XMLName xml.Name `xml:"Envelope"`
-	Body    SOAPBody `xml:"Body"`
-}
-
-type SOAPBody struct {
-	DepositRequest    *SOAPDepositRequest    `xml:"DepositRequest,omitempty"`
-	WithdrawalRequest *SOAPWithdrawalRequest `xml:"WithdrawalRequest,omitempty"`
+func NewGatewayB() PaymentGateway {
+	return &GatewayB{}
 }
 
 const gatewayBURL = "http://mock-gateway-b/soap" // Simulated endpoint
 
-// SOAPDepositRequest represents a SOAP/XML deposit request for GatewayB.
-type SOAPDepositRequest struct {
-	XMLName xml.Name `xml:"DepositRequest"`
-	Account string   `xml:"Account"`
-	Amount  float64  `xml:"Amount"`
-}
-
-// SOAPWithdrawalRequest represents a SOAP/XML withdrawal request for GatewayB.
-type SOAPWithdrawalRequest struct {
-	XMLName xml.Name `xml:"WithdrawalRequest"`
-	Account string   `xml:"Account"`
-	Amount  float64  `xml:"Amount"`
-}
-
 // ProcessDeposit simulates a SOAP request/response for GatewayB.
 func (g *GatewayB) ProcessDeposit(r *http.Request) (interface{}, error) {
-	req := &SOAPEnvelope{
-		Body: SOAPBody{
-			DepositRequest: &SOAPDepositRequest{Account: "demo", Amount: 100},
+	req := &dtos.SOAPEnvelope{
+		Body: dtos.SOAPBody{
+			DepositRequest: &dtos.SOAPDepositRequest{Account: "demo", Amount: 100},
 		},
 	}
 	payload, _ := xml.Marshal(req)
@@ -69,7 +50,7 @@ func (g *GatewayB) ProcessDeposit(r *http.Request) (interface{}, error) {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	var envelope SOAPEnvelope
+	var envelope dtos.SOAPEnvelope
 	if err := xml.Unmarshal(body, &envelope); err != nil {
 		return nil, err
 	}
@@ -78,9 +59,9 @@ func (g *GatewayB) ProcessDeposit(r *http.Request) (interface{}, error) {
 
 // ProcessWithdrawal simulates a SOAP request/response for GatewayB.
 func (g *GatewayB) ProcessWithdrawal(r *http.Request) (interface{}, error) {
-	req := &SOAPEnvelope{
-		Body: SOAPBody{
-			WithdrawalRequest: &SOAPWithdrawalRequest{Account: "demo", Amount: 100},
+	req := &dtos.SOAPEnvelope{
+		Body: dtos.SOAPBody{
+			WithdrawalRequest: &dtos.SOAPWithdrawalRequest{Account: "demo", Amount: 100},
 		},
 	}
 	payload, _ := xml.Marshal(req)
@@ -105,16 +86,9 @@ func (g *GatewayB) ProcessWithdrawal(r *http.Request) (interface{}, error) {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	var envelope SOAPEnvelope
+	var envelope dtos.SOAPEnvelope
 	if err := xml.Unmarshal(body, &envelope); err != nil {
 		return nil, err
 	}
 	return envelope, nil
-}
-
-// HandleCallback processes the callback for GatewayB.
-func (g *GatewayB) HandleCallback(req dtos.HandleCallbackRequest) error {
-	// Implement your callback logic here, e.g., update transaction status, etc.
-	// For now, just simulate success.
-	return nil
 }
