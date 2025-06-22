@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"gopkg.in/yaml.v3"
@@ -21,6 +23,8 @@ type Config struct {
 		APIVersion            string `yaml:"apiVersion"`
 		ServiceName           string `yaml:"serviceName"`
 		DefaultTimeoutSeconds int    `yaml:"defaultTimeoutSeconds"`
+		Host                  string `yaml:"host"`
+		Port                  int    `yaml:"port"`
 	} `yaml:"static"`
 }
 
@@ -39,6 +43,16 @@ func GetConfig() *Config {
 		cfg := &Config{}
 		if err := yaml.Unmarshal(data, cfg); err != nil {
 			log.Fatalf("failed to unmarshal config: %v", err)
+		}
+		// Dynamically update gateway URLs
+		host := cfg.Static.Host
+		port := cfg.Static.Port
+		for name, gw := range cfg.Gateways {
+			url := gw.URL
+			url = strings.ReplaceAll(url, "{host}", host)
+			url = strings.ReplaceAll(url, "{port}", fmt.Sprintf("%d", port))
+			gw.URL = url
+			cfg.Gateways[name] = gw
 		}
 		config = cfg
 	})

@@ -1,18 +1,16 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"Payment-Gateway/pkg/logger"
+	"os"
+
+	"go.uber.org/zap"
 )
 
 func main() {
-	router, err := NewRouter()
-	if err != nil {
-		log.Fatalf("Failed to create router: %v", err)
+	if err := StartServer(); err != nil {
+		logger.GetLogger().Fatal("Server exited with error", zap.Error(err))
 	}
-	addr := ":8080"
-	log.Printf("Starting server on %s", addr)
-	if err := http.ListenAndServe(addr, router); err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+	logger.Sync()
+	os.Exit(0)
 }

@@ -1,9 +1,9 @@
 gateways:
   gatewayA:
-    url: "http://localhost:8080/mock-gateway-a"
+    url: "http://{host}:{port}/mock-gateway-a"
     enabled: true
   gatewayB:
-    url: "http://localhost:8080/mock-gateway-b"
+    url: "http://{host}:{port}/mock-gateway-b"
     enabled: true
 
 middlewares:
@@ -18,3 +18,5 @@ static:
   apiVersion: "v1"
   serviceName: "Payment-Gateway"
   defaultTimeoutSeconds: 10
+  host: "0.0.0.0"
+  port: 8000

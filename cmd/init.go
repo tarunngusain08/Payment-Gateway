@@ -6,10 +6,17 @@ import (
 	"Payment-Gateway/internal/middleware"
 	"Payment-Gateway/internal/repository"
 	"Payment-Gateway/internal/service"
+	"Payment-Gateway/pkg/logger"
+	"context"
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // Registry for gateway constructors
@@ -21,7 +28,6 @@ var gatewayRegistry = map[string]func(url string) gateway.PaymentGateway{
 
 func initializeMiddlewares(router *mux.Router) {
 	router.Use(middleware.ContextMiddleware)
-	router.Use(middleware.AuthMiddleware)
 	router.Use(middleware.TimeoutMiddleware(10 * time.Second))
 	router.Use(middleware.LatencyTrackerMiddleware)
 	router.Use(middleware.LoggingMiddleware)
@@ -65,4 +71,42 @@ func NewRouter() (http.Handler, error) {
 	setupRoutes(router, handlers)
 
 	return router, nil
+}
+
+func StartServer() error {
+	cfg := GetConfig()
+	router, err := NewRouter()
+	if err != nil {
+		return err
+	}
+	addr := fmt.Sprintf("%s:%d", cfg.Static.Host, cfg.Static.Port)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: router,
+	}
+
+	defer logger.Sync()
+	logger.GetLogger().Info("Starting server", zap.String("address", addr))
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-quit
+		logger.GetLogger().Info("Shutdown signal received")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			logger.GetLogger().Error("Server shutdown error", zap.Error(err))
+		}
+	}()
+
+	err = srv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		logger.GetLogger().Error("Server failed", zap.Error(err))
+		return err
+	}
+
+	logger.GetLogger().Info("Server exited gracefully")
+	return nil
 }
