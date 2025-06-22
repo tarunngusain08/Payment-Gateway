@@ -1,12 +1,29 @@
 package gateway
 
 import (
+	"Payment-Gateway/internal/config"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 )
+
+func getTestResilienceConfig() *config.ResilienceConfig {
+	return &config.ResilienceConfig{
+		HTTPTimeoutSeconds:   2,
+		MaxRetries:           1,
+		InitialBackoffMillis: 100,
+		MaxBackoffMillis:     200,
+		CircuitBreaker: config.CircuitBreakerConfig{
+			Enabled:      false, // Disable circuit breaker for timeout tests
+			MaxRequests:  100,
+			Interval:     60,
+			Timeout:      30,
+			FailureRatio: 0.6,
+		},
+	}
+}
 
 func TestGatewayA_ProcessDeposit_Success(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +32,7 @@ func TestGatewayA_ProcessDeposit_Success(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayA(ts.URL, "gatewayA")
+	g := NewGatewayA(ts.URL, "gatewayA", getTestResilienceConfig())
 	resp, err := g.ProcessDeposit(nil)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -32,7 +49,7 @@ func TestGatewayA_ProcessDeposit_Failure(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayA(ts.URL, "gatewayA")
+	g := NewGatewayA(ts.URL, "gatewayA", getTestResilienceConfig())
 	_, err := g.ProcessDeposit(nil)
 	if err == nil || err.Error() != "gateway A failure" {
 		t.Errorf("expected gateway A failure error, got %v", err)
@@ -45,7 +62,7 @@ func TestGatewayA_ProcessDeposit_Timeout(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayA(ts.URL, "gatewayA")
+	g := NewGatewayA(ts.URL, "gatewayA", getTestResilienceConfig())
 	_, err := g.ProcessDeposit(nil)
 	if err == nil || err.Error() != "gateway A timeout" {
 		t.Errorf("expected gateway A timeout error, got %v", err)
@@ -59,7 +76,7 @@ func TestGatewayA_ProcessWithdrawal_Success(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayA(ts.URL, "gatewayA")
+	g := NewGatewayA(ts.URL, "gatewayA", getTestResilienceConfig())
 	resp, err := g.ProcessWithdrawal(nil)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -76,7 +93,7 @@ func TestGatewayA_ProcessWithdrawal_Failure(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayA(ts.URL, "gatewayA")
+	g := NewGatewayA(ts.URL, "gatewayA", getTestResilienceConfig())
 	_, err := g.ProcessWithdrawal(nil)
 	if err == nil || err.Error() != "gateway A failure" {
 		t.Errorf("expected gateway A failure error, got %v", err)
@@ -89,7 +106,7 @@ func TestGatewayA_ProcessWithdrawal_Timeout(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayA(ts.URL, "gatewayA")
+	g := NewGatewayA(ts.URL, "gatewayA", getTestResilienceConfig())
 	_, err := g.ProcessWithdrawal(nil)
 	if err == nil || err.Error() != "gateway A timeout" {
 		t.Errorf("expected gateway A timeout error, got %v", err)

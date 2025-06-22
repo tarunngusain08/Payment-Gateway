@@ -21,14 +21,13 @@ import (
 
 // GatewayB is a skeleton for a SOAP-based gateway.
 type GatewayB struct {
-	URL            string
-	Client         *http.Client
-	CircuitBreaker *gobreaker.CircuitBreaker
-	Config         config.ResilienceConfig
+	URL              string
+	Client           *http.Client
+	CircuitBreaker   *gobreaker.CircuitBreaker
+	ResilienceConfig *config.ResilienceConfig
 }
 
-func NewGatewayB(url, gatewayName string) PaymentGateway {
-	cfg := config.GetConfig().Resilience
+func NewGatewayB(url, gatewayName string, cfg *config.ResilienceConfig) PaymentGateway {
 	var cb *gobreaker.CircuitBreaker
 	if cfg.CircuitBreaker.Enabled {
 		cb = gobreaker.NewCircuitBreaker(gobreaker.Settings{
@@ -43,10 +42,10 @@ func NewGatewayB(url, gatewayName string) PaymentGateway {
 		})
 	}
 	return &GatewayB{
-		URL:            url,
-		Client:         &http.Client{Timeout: time.Duration(cfg.HTTPTimeoutSeconds) * time.Second},
-		CircuitBreaker: cb,
-		Config:         cfg,
+		URL:              url,
+		Client:           &http.Client{Timeout: time.Duration(cfg.HTTPTimeoutSeconds) * time.Second},
+		CircuitBreaker:   cb,
+		ResilienceConfig: cfg,
 	}
 }
 
@@ -65,9 +64,9 @@ func (g *GatewayB) doWithResilience(req *http.Request) (*http.Response, error) {
 	}
 
 	b := backoff.NewExponentialBackOff()
-	b.InitialInterval = time.Duration(g.Config.InitialBackoffMillis) * time.Millisecond
-	b.MaxInterval = time.Duration(g.Config.MaxBackoffMillis) * time.Millisecond
-	b.MaxElapsedTime = time.Duration(g.Config.HTTPTimeoutSeconds*g.Config.MaxRetries) * time.Second
+	b.InitialInterval = time.Duration(g.ResilienceConfig.InitialBackoffMillis) * time.Millisecond
+	b.MaxInterval = time.Duration(g.ResilienceConfig.MaxBackoffMillis) * time.Millisecond
+	b.MaxElapsedTime = time.Duration(g.ResilienceConfig.HTTPTimeoutSeconds*g.ResilienceConfig.MaxRetries) * time.Second
 
 	var resp *http.Response
 	err := backoff.Retry(func() error {
@@ -77,7 +76,7 @@ func (g *GatewayB) doWithResilience(req *http.Request) (*http.Response, error) {
 		}
 		resp = r.(*http.Response)
 		return nil
-	}, backoff.WithMaxRetries(b, uint64(g.Config.MaxRetries)))
+	}, backoff.WithMaxRetries(b, uint64(g.ResilienceConfig.MaxRetries)))
 	return resp, err
 }
 

@@ -21,7 +21,7 @@ func TestGatewayB_ProcessDeposit_Success(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayB(ts.URL, "gatewayB")
+	g := NewGatewayB(ts.URL, "gatewayB", getTestResilienceConfig())
 	resp, err := g.ProcessDeposit(nil)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -38,7 +38,7 @@ func TestGatewayB_ProcessDeposit_Failure(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayB(ts.URL, "gatewayB")
+	g := NewGatewayB(ts.URL, "gatewayB", getTestResilienceConfig())
 	_, err := g.ProcessDeposit(nil)
 	if err == nil || err.Error() != "gateway B failure" {
 		t.Errorf("expected gateway B failure error, got %v", err)
@@ -51,7 +51,7 @@ func TestGatewayB_ProcessDeposit_Timeout(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayB(ts.URL, "gatewayB")
+	g := NewGatewayB(ts.URL, "gatewayB", getTestResilienceConfig())
 	_, err := g.ProcessDeposit(nil)
 	if err == nil || err.Error() != "gateway B timeout" {
 		t.Errorf("expected gateway B timeout error, got %v", err)
@@ -70,7 +70,7 @@ func TestGatewayB_ProcessWithdrawal_Success(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayB(ts.URL, "gatewayB")
+	g := NewGatewayB(ts.URL, "gatewayB", getTestResilienceConfig())
 	resp, err := g.ProcessWithdrawal(nil)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -87,7 +87,7 @@ func TestGatewayB_ProcessWithdrawal_Failure(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayB(ts.URL, "gatewayB")
+	g := NewGatewayB(ts.URL, "gatewayB", getTestResilienceConfig())
 	_, err := g.ProcessWithdrawal(nil)
 	if err == nil || err.Error() != "gateway B failure" {
 		t.Errorf("expected gateway B failure error, got %v", err)
@@ -100,7 +100,7 @@ func TestGatewayB_ProcessWithdrawal_Timeout(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	g := NewGatewayB(ts.URL, "gatewayB")
+	g := NewGatewayB(ts.URL, "gatewayB", getTestResilienceConfig())
 	_, err := g.ProcessWithdrawal(nil)
 	if err == nil || err.Error() != "gateway B timeout" {
 		t.Errorf("expected gateway B timeout error, got %v", err)

@@ -21,7 +21,7 @@ import (
 )
 
 // Registry for gateway constructors
-var gatewayRegistry = map[string]func(url, gatewayName string) gateway.PaymentGateway{
+var gatewayRegistry = map[string]func(url, gatewayName string, cfg *cfg.ResilienceConfig) gateway.PaymentGateway{
 	"gatewayA": gateway.NewGatewayA,
 	"gatewayB": gateway.NewGatewayB,
 	// Add more gateway constructors here as needed
@@ -42,7 +42,7 @@ func initializeHandlers() (*handler.Handlers, error) {
 	for name, gwCfg := range cfg.Gateways {
 		if gwCfg.Enabled {
 			if constructor, ok := gatewayRegistry[name]; ok {
-				gateways = append(gateways, constructor(gwCfg.URL, gwCfg.Name))
+				gateways = append(gateways, constructor(gwCfg.URL, gwCfg.Name, &cfg.Resilience))
 			}
 		}
 	}
