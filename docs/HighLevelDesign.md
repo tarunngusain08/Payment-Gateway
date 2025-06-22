@@ -90,21 +90,6 @@ The Payment-Gateway microservice is a modular, extensible, and resilient service
     }
     ```
 
-### Transaction Status
-
-- **GET /transaction/{id}**
-  - **Response:**  
-    ```json
-    {
-      "id": "string",
-      "type": "deposit|withdrawal",
-      "amount": 100.0,
-      "status": "pending|success|failed",
-      "timestamp": "RFC3339",
-      "account": "string"
-    }
-    ```
-
 ### Gateway Callbacks
 
 - **POST /callback/gateway-a**  
@@ -119,11 +104,6 @@ The Payment-Gateway microservice is a modular, extensible, and resilient service
 - **POST /mock-gateway-b/deposit**
 - **POST /mock-gateway-b/withdrawal**
 
-### Health/Readiness
-
-- **GET /health**
-- **GET /ready**
-
 ---
 
 ## 6. Route Summary
@@ -132,14 +112,9 @@ The Payment-Gateway microservice is a modular, extensible, and resilient service
 |--------|-----------------------------|------------------------------------|
 | POST   | /deposit                    | Initiate deposit                   |
 | POST   | /withdrawal                 | Initiate withdrawal                |
-| GET    | /transaction/{id}           | Get transaction status             |
 | POST   | /callback/gateway-a         | GatewayA callback (JSON)           |
 | POST   | /callback/gateway-b         | GatewayB callback (XML/SOAP)       |
 | POST   | /mock-gateway-a/deposit     | Mock GatewayA deposit endpoint     |
 | POST   | /mock-gateway-a/withdrawal  | Mock GatewayA withdrawal endpoint  |
 | POST   | /mock-gateway-b/deposit     | Mock GatewayB deposit endpoint     |
 | POST   | /mock-gateway-b/withdrawal  | Mock GatewayB withdrawal endpoint  |
-| GET    | /health                     | Health check                       |
-| GET    | /ready                      | Readiness check                    |
-
----
