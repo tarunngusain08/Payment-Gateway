@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project implements a modular, extensible payment gateway service in Go. It supports multiple gateway integrations (e.g., GatewayA with JSON, GatewayB with SOAP/XML), transaction management, and callback handling. The codebase is designed for testability, maintainability, and ease of extension.
+Payment-Gateway is a modular, extensible payment gateway service written in Go. It supports multiple gateway integrations (e.g., GatewayA with JSON, GatewayB with SOAP/XML), transaction management, and callback handling. The codebase is designed for resilience, observability, testability, and ease of extension.
 
 ---
 
@@ -50,39 +50,85 @@ This project implements a modular, extensible payment gateway service in Go. It 
 - **Extensibility:**  
   Adding a new gateway requires implementing the `PaymentGateway` interface and registering it in the gateway pool.
 
----
-
-## Notable Implementation Details
-
 - **XML/JSON Compatibility:**  
   DTOs use struct tags for both XML and JSON, ensuring correct parsing for each gateway protocol.
+
 - **Thread Safety:**  
   The in-memory repository uses `sync.Map` for safe concurrent access.
+
 - **Mocking and Test Coverage:**  
   All interfaces are mocked for unit testing, and all major code paths are covered by tests.
+
 - **Error Propagation:**  
   Errors are propagated and handled at the appropriate layer, with HTTP handlers returning meaningful status codes.
 
 ---
 
-## Troubleshooting
+## Setup & Running Instructions
 
-- If containers fail to start, check logs with `docker-compose logs`.
-- If tests fail, run them with `make test` and review the output.
-- Ensure Docker is running and you have sufficient resources allocated.
+### Prerequisites
+
+- Go 1.20+
+- Docker & Docker Compose (for containerized development)
+- Make (for build/test automation)
+
+### Local Development
+
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/your-org/Payment-Gateway.git
+   cd Payment-Gateway
+   ```
+
+2. **Build the project:**
+   ```sh
+   make build
+   ```
+
+3. **Run the service locally:**
+   ```sh
+   make run
+   ```
+   Or, using Docker Compose:
+   ```sh
+   docker-compose up --build
+   ```
+
+4. **Configuration:**
+   - Edit `internal/config/config.yaml` to adjust gateway URLs, ports, and resilience settings.
 
 ---
 
-## Extending the Service
+## How to Run Tests
 
-To add a new payment gateway:
-1. Implement the `PaymentGateway` interface in `internal/gateway/`.
-2. Add the new gateway to the gateway pool in the service layer.
-3. Add new handlers or callback logic as needed.
-4. Write tests for the new gateway and its integration.
+- **Unit tests:**
+  ```sh
+  make test
+  ```
 
 ---
 
-## Summary
+## Sample API Payloads
 
-This project demonstrates a robust, extensible, and testable payment gateway service in Go, with clear separation of concerns, strong test coverage, and modern development tooling.
+See [`docs/DummyCurls&Responses.md`](docs/DummyCurls&Responses.md) for ready-to-use curl commands and example responses.
+
+---
+
+## Tradeoffs and Assumptions
+
+- **In-memory storage:** The repository uses an in-memory store for demo purposes. For production, swap with a persistent backend.
+- **Gateway simulation:** Mock endpoints are provided for GatewayA and GatewayB; real integrations would require secure credentials and error handling.
+- **Resilience:** Timeout, retry, and circuit breaker patterns are implemented for gateway calls. These are configurable via YAML.
+- **Extensibility:** Adding a new gateway requires implementing the `PaymentGateway` interface and registering it in the pool.
+- **Observability:** All handlers, services, and gateways use structured logging with trace and request IDs.
+- **Testing:** The project is designed for high test coverage and easy mocking.
+
+---
+
+## Documentation
+
+- [Build & Development Guide](docs/Build.md)
+- [Sample API Requests & Responses](docs/DummyCurls&Responses.md)
+- [OpenAPI Spec](docs/openapi.yaml)
+
+---

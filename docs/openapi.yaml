@@ -1,0 +1,201 @@
+openapi: 3.1.0
+info:
+  title: Payment-Gateway API
+  version: 1.0.0
+  description: API for deposit, withdrawal, and gateway callbacks.
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /deposit:
+    post:
+      summary: Deposit funds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              account_id: user123
+              amount: 100.0
+      responses:
+        '200':
+          description: Deposit response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+              example:
+                success: true
+
+  /withdrawal:
+    post:
+      summary: Withdraw funds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              account_id: user123
+              amount: 50.0
+      responses:
+        '200':
+          description: Withdrawal response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+              example:
+                success: true
+
+  /callback/gateway-a:
+    post:
+      summary: Callback from Gateway A (JSON)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandleCallbackRequest'
+            example:
+              transaction_id: txn123
+              status: success
+              metadata: {}
+              gateway_ref: gwref123
+              amount: 100.0
+              currency: USD
+              timestamp: 2024-06-01T12:00:00Z
+      responses:
+        '200':
+          description: Callback response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HandleCallbackResponse'
+              example:
+                status: success
+                message: "Successfully processed callback for transaction: txn123"
+
+  /callback/gateway-b:
+    post:
+      summary: Callback from Gateway B (XML)
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/HandleCallbackRequestXML'
+            example: |
+              <HandleCallbackRequest>
+                <TransactionID>txn456</TransactionID>
+                <Status>failed</Status>
+                <GatewayRef>gwref456</GatewayRef>
+                <Amount>50.0</Amount>
+                <Currency>USD</Currency>
+                <Timestamp>2024-06-01T12:05:00Z</Timestamp>
+              </HandleCallbackRequest>
+      responses:
+        '200':
+          description: Callback response
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/HandleCallbackResponseXML'
+              example: |
+                <HandleCallbackResponse>
+                  <Status>success</Status>
+                  <Message>Gateway B callback processed for transaction: txn456, ref: gwref456</Message>
+                </HandleCallbackResponse>
+
+components:
+  schemas:
+    TransactionRequest:
+      type: object
+      properties:
+        account_id:
+          type: string
+        amount:
+          type: number
+      required:
+        - account_id
+        - amount
+
+    TransactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    HandleCallbackRequest:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        status:
+          type: string
+        metadata:
+          type: object
+        gateway_ref:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - transaction_id
+        - status
+        - gateway_ref
+        - amount
+        - currency
+        - timestamp
+
+    HandleCallbackResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+
+    HandleCallbackRequestXML:
+      xml:
+        name: HandleCallbackRequest
+      type: object
+      properties:
+        TransactionID:
+          type: string
+        Status:
+          type: string
+        GatewayRef:
+          type: string
+        Amount:
+          type: number
+        Currency:
+          type: string
+        Timestamp:
+          type: string
+      required:
+        - TransactionID
+        - Status
+        - GatewayRef
+        - Amount
+        - Currency
+        - Timestamp
+
+    HandleCallbackResponseXML:
+      xml:
+        name: HandleCallbackResponse
+      type: object
+      properties:
+        Status:
+          type: string
+        Message:
+          type: string
