@@ -45,7 +45,8 @@ func initializeHandlers() (*handler.Handlers, error) {
 
 	// Initialize worker pool
 	numWorkers := cfg.WorkerPool.NumWorkers
-	workerPool := service.NewWorkerPool(numWorkers)
+	bufferSize := cfg.WorkerPool.BufferSize
+	workerPool := service.NewWorkerPool(numWorkers, bufferSize)
 
 	var gateways []gateway.PaymentGateway
 	for name, gwCfg := range cfg.Gateways {

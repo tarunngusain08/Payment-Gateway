@@ -88,6 +88,40 @@ Docker Compose is used to orchestrate the Payment-Gateway service and its depend
 
 ### 3. Performance Testing and Profiling
 
+#### Load Testing
+Run the load test simulator:
+```sh
+make load_test
+```
+
+Configure load test parameters in `load_test.go`:
+```go
+const (
+    numTransactions     = 10000    // Total number of transactions to process
+    concurrentClients   = 100      // Number of concurrent clients
+    callbackDelayMillis = 100      // Max random delay for callbacks
+)
+```
+
+Common load test scenarios:
+- **Light load:**
+  ```go
+  numTransactions   = 1000
+  concurrentClients = 10
+  ```
+- **Moderate load:**
+  ```go
+  numTransactions   = 10000
+  concurrentClients = 100
+  ```
+- **Heavy load:**
+  ```go
+  numTransactions   = 100000
+  concurrentClients = 1000
+  ```
+
+View detailed benchmarking results in [Benchmarking Results](Benchmarking-Results.md).
+
 #### Benchmarking
 Run benchmarks for all packages:
 ```sh

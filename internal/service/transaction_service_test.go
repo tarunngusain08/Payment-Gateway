@@ -11,7 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-var workerPool = NewWorkerPool(1)
+var workerPool = NewWorkerPool(1, 10)
 
 func TestCreateAndProcessDeposit_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)

@@ -41,10 +41,10 @@ The Payment-Gateway microservice is a modular, extensible, and resilient service
 ## 4. Rough Scale Estimation
 
 - **Throughput:**  
-  - With 10 workers (default), can process ~100-500 transactions/sec on a single node (depends on gateway latency).
+  - With 10 workers (default), can process ~200-5000 transactions/sec on a single node (depends on gateway latency and node's configuration).
   - Horizontal scaling: Add more nodes and increase worker pool size.
 - **Latency:**  
-  - End-to-end latency is typically gateway-limited (e.g., 100ms-2s per transaction).
+  - End-to-end latency is typically gateway-limited (e.g., 100ms-5s per transaction).
   - Internal processing adds minimal overhead due to async design.
 - **Memory/CPU:**  
   - In-memory store is lightweight; memory usage grows with transaction volume but is bounded by TTL and cleanup.

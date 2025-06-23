@@ -2,7 +2,7 @@ APP_NAME=payment-gateway
 PKG=./...
 MOCKS_DIR=pkg/mocks
 
-.PHONY: all build run test bench profile mocks clean
+.PHONY: all build run test bench profile mocks clean load_test
 
 all: build
 
@@ -29,3 +29,6 @@ mocks:
 clean:
 	rm -f $(APP_NAME) cpu.prof mem.prof *.test *.out
 	go clean
+
+load_test:
+	go test -v -run ^TestLoadSimulator$$ ./load_test.go

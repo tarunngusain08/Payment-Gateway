@@ -21,9 +21,10 @@ type WorkerPool struct {
 	taskQueue chan taskRequest
 }
 
-func NewWorkerPool(numWorkers int) *WorkerPool {
+// NewWorkerPool now accepts a bufferSize parameter for the taskQueue channel.
+func NewWorkerPool(numWorkers int, bufferSize int) *WorkerPool {
 	wp := &WorkerPool{
-		taskQueue: make(chan taskRequest),
+		taskQueue: make(chan taskRequest, bufferSize),
 	}
 	for i := 0; i < numWorkers; i++ {
 		go wp.worker()

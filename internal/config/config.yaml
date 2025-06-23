@@ -41,4 +41,6 @@ resilience:
     failureRatio: 0.6
 
 workerPool:
-  numWorkers: 10
+  numWorkers: 11
+  bufferSize: 200
+

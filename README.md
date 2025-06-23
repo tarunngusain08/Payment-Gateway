@@ -114,6 +114,12 @@ Payment-Gateway is a modular, extensible payment gateway service written in Go. 
   make test
   ```
 
+- **Load tests:**
+  ```sh
+  make load_test
+  ```
+  See [Benchmarking Results](docs/Benchmarking-Results.md) for detailed performance analysis.
+
 ---
 
 ## Sample API Payloads
@@ -134,11 +140,12 @@ See [`docs/DummyCurls&Responses.md`](docs/DummyCurls&Responses.md) for ready-to-
 ---
 
 ## Documentation
-- [High Level Design](docs/HighLevelDesign.md)
-- [Build & Development Guide](docs/Build.md)
-- [Sample API Requests & Responses](docs/DummyCurls&Responses.md)
-- [OpenAPI Spec](docs/openapi.yaml)
-- [GCP Deployment Guide](docs/GCPDeployment.md)
-- [Minikube Deployment Guide](docs/MinikubeDeployment.md)
+- [High Level Design](docs/High-Level-Design.md)
+- [Build & Development Guide](docs/Build-Steps.md)
+- [Sample API Requests & Responses](docs/Dummy-Curls&Responses.md)
+- [Benchmarking Results](docs/Benchmarking-Results.md)
+- [Assumptions](docs/Assumptions.md)
+- [GCP Deployment Guide](docs/GCP-Deployment.md)
+- [Minikube Deployment Guide](docs/Minikube-Deployment.md)
 
 ---

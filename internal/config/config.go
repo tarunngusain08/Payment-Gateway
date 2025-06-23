@@ -40,6 +40,7 @@ type CacheConfig struct {
 
 type WorkerPoolConfig struct {
 	NumWorkers int `yaml:"numWorkers"`
+	BufferSize int `yaml:"bufferSize"`
 }
 
 type Config struct {
