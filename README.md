@@ -145,6 +145,7 @@ See [`docs/DummyCurls&Responses.md`](docs/DummyCurls&Responses.md) for ready-to-
 - [Sample API Requests & Responses](docs/Dummy-Curls&Responses.md)
 - [Benchmarking Results](docs/Benchmarking-Results.md)
 - [Assumptions](docs/Assumptions.md)
+- [Logging & Profiling](docs/LoggingAndProfiling.md)
 - [GCP Deployment Guide](docs/GCP-Deployment.md)
 - [Minikube Deployment Guide](docs/Minikube-Deployment.md)
 
