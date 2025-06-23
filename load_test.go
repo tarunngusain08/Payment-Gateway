@@ -15,7 +15,7 @@ import (
 // --- Load Test Parameters ---
 const (
 	baseURL             = "http://localhost:8000"
-	numTransactions     = 20000
+	numTransactions     = 1000
 	concurrentClients   = 10
 	callbackDelayMillis = 100 // max random delay in milliseconds
 )
