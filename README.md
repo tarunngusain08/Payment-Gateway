@@ -124,7 +124,7 @@ Payment-Gateway is a modular, extensible payment gateway service written in Go. 
 
 ## Sample API Payloads
 
-See [`docs/DummyCurls&Responses.md`](docs/DummyCurls&Responses.md) for ready-to-use curl commands and example responses.
+See [`docs/Dummy-Curls&Responses.md`](docs/Dummy-Curls&Responses.md) for ready-to-use curl commands and example responses.
 
 ---
 
