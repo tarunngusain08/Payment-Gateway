@@ -127,6 +127,98 @@ const (
 
 ---
 
+### Case 6
+
+```
+bufferSize: 200
+
+const (
+    numTransactions     = 10000
+    concurrentClients   = 100
+    callbackDelayMillis = 1001
+)
+```
+- **numWorkers = 11:** Passed successfully.
+- **numWorkers = 22:** Three runs, three different results:
+  - Once failed with context deadline exceeded.
+  - Once passed in 1.9s.
+  - Once passed in 6.9s.
+- **Observation:** Higher worker count increases throughput but also increases variability and risk of deadline exceeded errors, especially as system approaches resource limits.
+
+---
+
+### Case 7
+
+```
+workerPool:
+  numWorkers: 11
+  bufferSize: 200
+
+const (
+    numTransactions     = 10000
+    concurrentClients   = 100
+    callbackDelayMillis = 100
+)
+```
+- **Result:** Passed in ~6.75s.
+- **Observation:** Stable performance with moderate concurrency and buffer size.
+
+---
+
+### Case 8
+
+```
+workerPool:
+  numWorkers: 11
+  bufferSize: 200
+
+const (
+    numTransactions     = 10000
+    concurrentClients   = 1000
+    callbackDelayMillis = 100
+)
+```
+- **Result:** Passed in ~2.74s.
+- **Observation:** Higher concurrency with same buffer size improves throughput, test completes faster.
+
+---
+
+### Case 9
+
+```
+workerPool:
+  numWorkers: 11
+  bufferSize: 200
+
+const (
+    numTransactions     = 10000
+    concurrentClients   = 1000
+    callbackDelayMillis = 1000
+)
+```
+- **Result:** Passed in ~1.83s.
+- **Observation:** Increasing callback delay spreads callback load, reducing contention and improving throughput.
+
+---
+
+### Case 10
+
+```
+workerPool:
+  numWorkers: 11
+  bufferSize: 200
+
+const (
+    numTransactions     = 20000
+    concurrentClients   = 100
+    callbackDelayMillis = 1000
+)
+```
+- **Result:** Passed in ~9.53s.
+- **Observation:** Doubling transactions with moderate concurrency and higher callback delay increases total test time but remains stable.
+
+---
+
 ### Callback Delay & Buffer Size Sensitivity
 
 - Increasing `bufferSize` to 200 and using `callbackDelayMillis` (1–1000ms) with `numWorkers: 11` and `concurrentClients: 1000`:
