@@ -130,20 +130,23 @@ const (
 ### Case 6
 
 ```
-bufferSize: 200
+workerPool:
+  bufferSize: 200
 
 const (
     numTransactions     = 10000
     concurrentClients   = 100
-    callbackDelayMillis = 1001
+    callbackDelayMillis = 1001 // max random delay in milliseconds
 )
 ```
 - **numWorkers = 11:** Passed successfully.
 - **numWorkers = 22:** Three runs, three different results:
-  - Once failed with context deadline exceeded.
-  - Once passed in 1.9s.
-  - Once passed in 6.9s.
-- **Observation:** Higher worker count increases throughput but also increases variability and risk of deadline exceeded errors, especially as system approaches resource limits.
+  - Once failed with context deadline exceeded (indicates worker pool or system saturation).
+  - Once passed in 1.9s (high throughput, low contention).
+  - Once passed in 6.9s (higher contention, possible resource throttling).
+- **Details:**  
+  - Increasing `numWorkers` to 22 can improve throughput but also increases the risk of context deadline exceeded errors and run-to-run variability, especially as the system approaches CPU or network limits.
+  - Callback delay of up to 1s spreads callback load, but high concurrency and worker count can still saturate the system.
 
 ---
 
@@ -157,11 +160,13 @@ workerPool:
 const (
     numTransactions     = 10000
     concurrentClients   = 100
-    callbackDelayMillis = 100
+    callbackDelayMillis = 100 // max random delay in milliseconds
 )
 ```
 - **Result:** Passed in ~6.75s.
-- **Observation:** Stable performance with moderate concurrency and buffer size.
+- **Details:**  
+  - Moderate concurrency and buffer size provide stable performance.
+  - Lower callback delay increases callback concurrency, which can add pressure to the system.
 
 ---
 
@@ -175,11 +180,13 @@ workerPool:
 const (
     numTransactions     = 10000
     concurrentClients   = 1000
-    callbackDelayMillis = 100
+    callbackDelayMillis = 100 // max random delay in milliseconds
 )
 ```
 - **Result:** Passed in ~2.74s.
-- **Observation:** Higher concurrency with same buffer size improves throughput, test completes faster.
+- **Details:**  
+  - High concurrency with same buffer size improves throughput.
+  - System is able to handle the burst due to sufficient buffer and worker pool sizing.
 
 ---
 
@@ -193,11 +200,13 @@ workerPool:
 const (
     numTransactions     = 10000
     concurrentClients   = 1000
-    callbackDelayMillis = 1000
+    callbackDelayMillis = 1000 // max random delay in milliseconds
 )
 ```
 - **Result:** Passed in ~1.83s.
-- **Observation:** Increasing callback delay spreads callback load, reducing contention and improving throughput.
+- **Details:**  
+  - Increasing callback delay spreads callback load, reducing contention and improving throughput.
+  - High concurrency and buffer size allow the system to process requests efficiently.
 
 ---
 
@@ -211,11 +220,13 @@ workerPool:
 const (
     numTransactions     = 20000
     concurrentClients   = 100
-    callbackDelayMillis = 1000
+    callbackDelayMillis = 1000 // max random delay in milliseconds
 )
 ```
 - **Result:** Passed in ~9.53s.
-- **Observation:** Doubling transactions with moderate concurrency and higher callback delay increases total test time but remains stable.
+- **Details:**  
+  - Doubling the number of transactions with moderate concurrency and higher callback delay increases total test time but remains stable.
+  - System demonstrates good resilience and throughput under increased load.
 
 ---
 
