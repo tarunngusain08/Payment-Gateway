@@ -1,5 +1,7 @@
 # High-Level Design: Payment-Gateway Microservice
 
+<img width="1221" alt="Screenshot 2025-06-23 at 5 52 45 PM" src="https://github.com/user-attachments/assets/d1488263-1cfb-49e2-979a-41d190e497cc" />
+
 ## 1. Overview
 
 The Payment-Gateway microservice is a modular, extensible, and resilient service for processing payment transactions (deposits and withdrawals) via multiple external payment gateways. It is designed for high throughput, reliability, and easy integration of new gateways and protocols.
